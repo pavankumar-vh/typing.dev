@@ -132,7 +132,9 @@ console.log(output);`,
 ]
 
 export function getSnippetsByLanguage(language) {
-  return snippets.filter((s) => s.language === language)
+  return snippets.filter(
+    (s) => s.language.toLowerCase() === language.toLowerCase()
+  )
 }
 
 export function getRandomSnippet(language) {
