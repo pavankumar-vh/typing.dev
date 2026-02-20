@@ -35,3 +35,4 @@ backend/dist
 .env.local
 .env.*.local
 backend/.env
+.vite/
