@@ -1,48 +1,25 @@
-import { Routes, Route } from 'react-router-dom'
-import Setup from './pages/Setup.jsx'
-import Train from './pages/Train.jsx'
-import Result from './pages/Result.jsx'
+import Home from './pages/Home.jsx'
 
 function App() {
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  }).toUpperCase()
-
   return (
-    <>
-      {/* CRT effects — fixed position overlays */}
+    <div className="bg-bg text-text font-mono min-h-screen">
+      {/* CRT overlays */}
       <div className="crt-scanlines" aria-hidden="true" />
       <div className="crt-vignette" aria-hidden="true" />
 
-      <div className="crt-screen bg-bg text-text font-mono min-h-screen">
-        {/* Terminal status bar */}
-        <header className="px-8 py-3 flex items-center justify-between text-xs border-b border-divider">
-          <div className="flex items-center gap-6">
-            <span className="glow-text font-bold tracking-widest">
-              TYPING.DEV
-            </span>
-            <span className="text-muted">v1.0.0</span>
-            <span className="text-muted">|</span>
-            <span className="text-muted">SYS:READY</span>
-          </div>
-          <div className="flex items-center gap-6 text-muted">
-            <span>{dateStr}</span>
-            <span className="text-text blink">█</span>
-          </div>
+      <div className="crt-screen">
+        {/* Minimal header */}
+        <header className="px-8 py-3 flex items-center justify-between border-b border-divider">
+          <span className="text-xs tracking-widest glow-text text-text select-none">
+            typing.dev
+          </span>
+          <span className="text-xs text-muted opacity-40 blink select-none">█</span>
         </header>
 
-        <main className="px-8 py-8">
-          <Routes>
-            <Route path="/" element={<Setup />} />
-            <Route path="/train" element={<Train />} />
-            <Route path="/result" element={<Result />} />
-          </Routes>
-        </main>
+        <Home />
       </div>
-    </>
+    </div>
   )
 }
 
 export default App
-

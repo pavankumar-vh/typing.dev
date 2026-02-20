@@ -1,13 +1,13 @@
 /**
- * Calculate characters per minute
- * @param {number} typedChars - total characters typed
+ * Calculate words per minute (1 word = 5 characters)
+ * @param {number} chars - characters to count (use correctChars for WPM, totalTyped for raw)
  * @param {number} elapsedMs - elapsed time in milliseconds
- * @returns {number} CPM rounded to nearest integer
+ * @returns {number} WPM rounded to nearest integer
  */
-export function calculateCPM(typedChars, elapsedMs) {
+export function calculateWPM(chars, elapsedMs) {
   if (elapsedMs <= 0) return 0
   const minutes = elapsedMs / 60000
-  return Math.round(typedChars / minutes)
+  return Math.round(chars / 5 / minutes)
 }
 
 /**
