@@ -17,25 +17,30 @@ export default function Setup() {
   }
 
   return (
-    <div className="max-w-xl mx-auto mt-16">
-      <p className="text-muted text-sm mb-8">select training parameters</p>
+    <div className="max-w-xl mx-auto mt-12">
+      {/* Boot header */}
+      <div className="mb-8 text-xs text-muted">
+        <p className="text-text glow-text mb-1">TYPING.DEV TRAINING CONSOLE</p>
+        <p>CONFIGURE SESSION PARAMETERS BELOW</p>
+        <p className="mt-1">──────────────────────────────────────</p>
+      </div>
 
       <div className="border-b border-divider mb-8 pb-8">
         <p className="text-muted text-xs uppercase tracking-widest mb-4">
-          language
+          &gt; SELECT LANGUAGE
         </p>
         <div className="flex gap-4">
           {languages.map((lang) => (
             <button
               key={lang}
               onClick={() => setSelectedLanguage(lang)}
-              className={`px-4 py-2 border text-sm cursor-pointer transition-colors ${
+              className={`px-4 py-2 border text-sm tracking-wider transition-all ${
                 selectedLanguage === lang
-                  ? 'border-accent text-accent'
-                  : 'border-divider text-text hover:bg-panel'
+                  ? 'border-text text-text glow-text bg-panel'
+                  : 'border-divider text-muted hover:border-muted hover:text-text'
               }`}
             >
-              {lang}
+              {selectedLanguage === lang ? '► ' : '  '}{lang}
             </button>
           ))}
         </div>
@@ -43,20 +48,20 @@ export default function Setup() {
 
       <div className="border-b border-divider mb-8 pb-8">
         <p className="text-muted text-xs uppercase tracking-widest mb-4">
-          duration
+          &gt; SELECT DURATION
         </p>
         <div className="flex gap-4">
           {durations.map((d) => (
             <button
               key={d}
               onClick={() => setSelectedDuration(d)}
-              className={`px-4 py-2 border text-sm cursor-pointer transition-colors ${
+              className={`px-4 py-2 border text-sm tracking-wider transition-all ${
                 selectedDuration === d
-                  ? 'border-accent text-accent'
-                  : 'border-divider text-text hover:bg-panel'
+                  ? 'border-text text-text glow-text bg-panel'
+                  : 'border-divider text-muted hover:border-muted hover:text-text'
               }`}
             >
-              {d}s
+              {selectedDuration === d ? '► ' : '  '}{d}s
             </button>
           ))}
         </div>
@@ -65,13 +70,13 @@ export default function Setup() {
       <button
         onClick={handleStart}
         disabled={!selectedLanguage || !selectedDuration}
-        className={`px-6 py-2 border text-sm cursor-pointer transition-colors ${
+        className={`px-6 py-2 border text-sm tracking-widest transition-all ${
           selectedLanguage && selectedDuration
-            ? 'border-accent text-accent hover:bg-panel'
+            ? 'border-text text-text glow-text bg-panel hover:bg-divider'
             : 'border-divider text-muted cursor-not-allowed'
         }`}
       >
-        start training →
+        {selectedLanguage && selectedDuration ? '[ INITIATE TRAINING SESSION ]' : '[ SELECT PARAMETERS ]'}
       </button>
     </div>
   )

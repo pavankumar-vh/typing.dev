@@ -120,7 +120,8 @@ export default function TypingCanvas({ targetText, disabled, onMetricsUpdate }) 
           return (
             <span
               key={i}
-              className="bg-accent text-bg animate-pulse"
+              className="bg-text text-bg blink"
+              style={{ textShadow: 'none' }}
             >
               {char === '\n' ? '↵\n' : char}
             </span>
@@ -128,7 +129,11 @@ export default function TypingCanvas({ targetText, disabled, onMetricsUpdate }) 
         }
 
         return (
-          <span key={i} className={`${colorClass} ${bgClass}`}>
+          <span
+            key={i}
+            className={`${colorClass} ${entry && !entry.correct ? 'glow-error' : ''}`}
+            style={entry && !entry.correct ? { backgroundColor: 'rgba(255, 49, 49, 0.1)' } : {}}
+          >
             {char === '\n' ? '↵\n' : char}
           </span>
         )

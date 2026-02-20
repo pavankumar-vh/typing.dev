@@ -84,8 +84,10 @@ export default function Train() {
 
   return (
     <div className="max-w-3xl mx-auto mt-8">
-      <p className="text-muted text-xs uppercase tracking-widest mb-4">
-        {language} — {duration}s session
+      <p className="text-muted text-xs tracking-widest mb-4">
+        LANG:<span className="text-text">{language.toUpperCase()}</span>
+        {'  '}DURATION:<span className="text-text">{duration}S</span>
+        {'  '}STATUS:<span className="text-success glow-text">ACTIVE</span>
       </p>
 
       <MetricsBar
@@ -95,6 +97,9 @@ export default function Train() {
         timeRemaining={timeRemaining}
       />
 
+      <div className="text-muted text-xs mb-2 tracking-widest">
+        &gt; SNIPPET LOADED — BEGIN TYPING
+      </div>
       <div className="bg-panel p-8 border border-divider">
         <TypingCanvas
           targetText={snippet.content}
@@ -103,8 +108,8 @@ export default function Train() {
         />
       </div>
 
-      <p className="text-muted text-xs mt-4">
-        press any key to begin
+      <p className="text-muted text-xs mt-4 blink">
+        _ press any key to start timer
       </p>
     </div>
   )
