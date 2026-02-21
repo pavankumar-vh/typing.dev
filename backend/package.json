@@ -1,0 +1,21 @@
+{
+  "name": "typing-dev-backend",
+  "version": "1.0.0",
+  "description": "REST API for Typing.dev — session tracking and leaderboard",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^13.6.1",
+    "mongoose": "^8.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

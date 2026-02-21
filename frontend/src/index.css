@@ -4,11 +4,11 @@
   --color-bg: #000A00;
   --color-panel: #001100;
   --color-text: #00FF41;
-  --color-muted: #008B20;
+  --color-muted: #00CC35;
   --color-success: #39FF14;
-  --color-error: #FF3131;
+  --color-error: #FF4444;
   --color-accent: #AAFFAA;
-  --color-divider: #003300;
+  --color-divider: #005500;
 
   --font-mono: "JetBrains Mono", monospace;
 }
@@ -23,13 +23,13 @@
 /* ─── Base ───────────────────────────────────────────────── */
 body {
   font-family: "JetBrains Mono", monospace;
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 17px;
+  line-height: 1.65;
   letter-spacing: 0.3px;
   background-color: #000A00;
   color: #00FF41;
   /* phosphor glow */
-  text-shadow: 0 0 6px rgba(0, 255, 65, 0.45);
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -107,8 +107,8 @@ body {
   pointer-events: none;
   background: radial-gradient(
     ellipse at center,
-    transparent 55%,
-    rgba(0, 0, 0, 0.65) 100%
+    transparent 60%,
+    rgba(0, 0, 0, 0.45) 100%
   );
 }
 
@@ -120,15 +120,16 @@ body {
 /* ─── Phosphor glow utilities ────────────────────────────── */
 .glow-text {
   text-shadow:
-    0 0 4px rgba(0, 255, 65, 0.9),
-    0 0 12px rgba(0, 255, 65, 0.5),
-    0 0 24px rgba(0, 255, 65, 0.2);
+    0 0 6px rgba(0, 255, 65, 1),
+    0 0 16px rgba(0, 255, 65, 0.7),
+    0 0 32px rgba(0, 255, 65, 0.35);
 }
 
 .glow-error {
   text-shadow:
-    0 0 4px rgba(255, 49, 49, 0.9),
-    0 0 12px rgba(255, 49, 49, 0.4);
+    0 0 6px rgba(255, 68, 68, 1),
+    0 0 16px rgba(255, 68, 68, 0.6),
+    0 0 28px rgba(255, 68, 68, 0.3);
 }
 
 .glow-accent {
