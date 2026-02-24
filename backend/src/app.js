@@ -1,5 +1,7 @@
 import express from 'express'
 import cors from 'cors'
+import mongoose from 'mongoose'
+import os from 'os'
 import sessionRoutes from './routes/sessions.js'
 import snippetRoutes from './routes/snippets.js'
 import { validateSession } from './middleware/validate.js'
@@ -41,12 +43,44 @@ if (process.env.NODE_ENV !== 'production') {
 
 // ── Health check ──────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  res.json({
-    success: true,
-    status: 'ok',
+  const dbStateMap = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' }
+  const dbState    = dbStateMap[mongoose.connection.readyState] ?? 'unknown'
+  const mem        = process.memoryUsage()
+  const toMB       = (bytes) => Math.round(bytes / 1024 / 1024 * 10) / 10
+
+  const status = dbState === 'connected' ? 'ok' : 'degraded'
+
+  res.status(status === 'ok' ? 200 : 503).json({
+    success: status === 'ok',
+    status,
     timestamp: new Date().toISOString(),
+    uptime: {
+      seconds: Math.floor(process.uptime()),
+      human: (() => {
+        const s = Math.floor(process.uptime())
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60
+        return `${h}h ${m}m ${sec}s`
+      })(),
+    },
+    database: {
+      state: dbState,
+      host: mongoose.connection.host || null,
+      name: mongoose.connection.name || null,
+    },
+    memory: {
+      heapUsed:  `${toMB(mem.heapUsed)} MB`,
+      heapTotal: `${toMB(mem.heapTotal)} MB`,
+      rss:       `${toMB(mem.rss)} MB`,
+    },
+    system: {
+      platform: process.platform,
+      nodeVersion: process.version,
+      cpus: os.cpus().length,
+      loadAvg: os.loadavg().map(n => Math.round(n * 100) / 100),
+    },
     service: 'typing-dev-api',
     version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
   })
 })
 
