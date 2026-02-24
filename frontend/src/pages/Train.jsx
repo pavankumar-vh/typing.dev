@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { getRandomSnippet } from '../data/snippets.js'
-import { calculateCPM, calculateAccuracy } from '../utils/metrics.js'
+import { getSnippet } from '../utils/snippetApi.js'
+import { calculateWPM as calculateCPM, calculateAccuracy } from '../utils/metrics.js'
 import TypingCanvas from '../components/TypingCanvas.jsx'
 import MetricsBar from '../components/MetricsBar.jsx'
 
 export default function Train() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { language, duration } = location.state || {}
+  const { language, difficulty = 'medium', duration } = location.state || {}
 
   const [snippet, setSnippet] = useState(null)
+  const [snippetLoading, setSnippetLoading] = useState(false)
+  const [snippetError, setSnippetError]   = useState(null)
   const [metrics, setMetrics] = useState({
     totalTyped: 0,
     errors: 0,
@@ -25,14 +27,19 @@ export default function Train() {
   const timerRef = useRef(null)
   const timerStartedRef = useRef(false)
 
-  // Redirect if no config
+  // Redirect if no config; otherwise fetch snippet via API (with local fallback)
   useEffect(() => {
     if (!language || !duration) {
       navigate('/')
       return
     }
-    setSnippet(getRandomSnippet(language))
-  }, [language, duration, navigate])
+    setSnippetLoading(true)
+    setSnippetError(null)
+    getSnippet(language, difficulty)
+      .then((s) => setSnippet(s))
+      .catch((err) => setSnippetError(err.message))
+      .finally(() => setSnippetLoading(false))
+  }, [language, difficulty, duration, navigate])
 
   // Start countdown when first key is pressed
   useEffect(() => {
@@ -80,12 +87,32 @@ export default function Train() {
     setMetrics(data)
   }, [])
 
+  if (snippetLoading) {
+    return (
+      <div className="max-w-3xl mx-auto mt-8 text-muted text-xs tracking-widest">
+        <p className="blink">&gt; GENERATING SNIPPET VIA AI … PLEASE WAIT</p>
+      </div>
+    )
+  }
+
+  if (snippetError && !snippet) {
+    return (
+      <div className="max-w-3xl mx-auto mt-8 text-xs tracking-widest">
+        <p className="text-error mb-4">&gt; ERROR: {snippetError}</p>
+        <button onClick={() => navigate('/setup')} className="border border-divider text-muted px-4 py-2 hover:text-text hover:border-muted transition-all">
+          [ BACK TO SETUP ]
+        </button>
+      </div>
+    )
+  }
+
   if (!snippet) return null
 
   return (
     <div className="max-w-3xl mx-auto mt-8">
       <p className="text-muted text-xs tracking-widest mb-4">
         LANG:<span className="text-text">{language.toUpperCase()}</span>
+        {'  '}DIFF:<span className="text-text">{difficulty.toUpperCase()}</span>
         {'  '}DURATION:<span className="text-text">{duration}S</span>
         {'  '}STATUS:<span className="text-success glow-text">ACTIVE</span>
       </p>

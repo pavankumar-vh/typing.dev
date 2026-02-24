@@ -5,7 +5,7 @@ const sessionSchema = new mongoose.Schema(
     language: {
       type: String,
       required: true,
-      enum: ['javascript', 'python', 'java'],
+      enum: ['javascript', 'typescript', 'python', 'java', 'go', 'rust', 'c++'],
       lowercase: true,
     },
     duration: {

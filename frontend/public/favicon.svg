@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- keyboard body -->
+  <rect x="8" y="36" width="84" height="52" rx="12" ry="12"
+        stroke="#00FF41" stroke-width="7" fill="none"/>
+  <!-- cable hook at top-right -->
+  <path d="M62 36 L62 22 Q62 14 70 14 L80 14 Q88 14 88 22"
+        stroke="#00FF41" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <!-- top row keys -->
+  <circle cx="28" cy="56" r="5" fill="#00FF41"/>
+  <circle cx="44" cy="56" r="5" fill="#00FF41"/>
+  <circle cx="60" cy="56" r="5" fill="#00FF41"/>
+  <circle cx="76" cy="56" r="5" fill="#00FF41"/>
+  <!-- bottom row: two keys + spacebar + two keys -->
+  <circle cx="22" cy="73" r="5" fill="#00FF41"/>
+  <rect   x="32" y="68" width="36" height="10" rx="5" ry="5" fill="#00FF41"/>
+  <circle cx="78" cy="73" r="5" fill="#00FF41"/>
+</svg>

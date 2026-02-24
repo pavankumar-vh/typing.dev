@@ -9,6 +9,7 @@ import MyStats from './pages/MyStats.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import BootScreen from './components/BootScreen.jsx'
+import CursorGlow from './components/CursorGlow.jsx'
 import { ConfigProvider } from './context/ConfigContext.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 
@@ -32,12 +33,12 @@ function Avatar() {
       title={name || 'Profile'}
       className="flex items-center justify-center font-bold select-none transition-all"
       style={({ isActive }) => ({
-        width: 28, height: 28, borderRadius: '50%',
-        background: 'rgba(0,10,0,0.85)',
+        width: 34, height: 34, borderRadius: '50%',
+        background: 'rgba(0,10,0,0.9)',
         border: `1.5px solid ${color}`,
         color,
-        fontSize: 11,
-        boxShadow: isActive ? `0 0 10px ${color}66` : 'none',
+        fontSize: 12,
+        boxShadow: isActive ? `0 0 14px ${color}66` : `0 0 0 ${color}00`,
         fontFamily: 'JetBrains Mono, monospace',
         textDecoration: 'none',
       })}
@@ -65,60 +66,83 @@ function AppShell({ booted, setBooted }) {
       >
         {/* ── Header ── */}
         <header
-          className="px-8 py-3 grid items-center"
+          className="px-8 py-4 flex items-center justify-between"
           style={{
-            gridTemplateColumns: '1fr auto 1fr',
-            borderBottom: '1px solid rgba(0,255,65,0.18)',
-            background: 'rgba(0,10,0,0.6)',
-            backdropFilter: 'blur(2px)',
+            borderBottom: '1px solid rgba(0,255,65,0.1)',
+            background: 'rgba(0,8,0,0.7)',
+            backdropFilter: 'blur(8px)',
           }}
         >
           {/* Left — logo */}
           <NavLink
             to="/"
-            className="flex items-center gap-2 text-sm tracking-[0.2em] glow-text text-text select-none font-bold w-fit"
+            className="flex items-center gap-2 select-none font-bold w-fit"
+            style={{ textDecoration: 'none', color: '#00FF41', textShadow: '0 0 12px rgba(0,255,65,0.7)', letterSpacing: '0.2em', fontSize: '0.9rem' }}
           >
-            <span className="opacity-80">&gt;_</span>
+            <span style={{ opacity: 0.7 }}>&gt;_</span>
             typing.dev
           </NavLink>
 
-          {/* Center — empty */}
-          <div />
-
-          {/* Right — nav links + auth + avatar */}
-          <nav className="flex items-center gap-6 justify-end">
+          {/* Center — pill nav */}
+          <div
+            className="flex items-center gap-1 px-2 py-1.5 rounded-2xl"
+            style={{
+              background: 'rgba(0,14,0,0.9)',
+              border: '1px solid rgba(0,100,0,0.35)',
+              boxShadow: '0 2px 16px rgba(0,0,0,0.4)',
+            }}
+          >
             {NAV.map(({ to, label, end }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={end}
-                className={({ isActive }) =>
-                  `text-xs tracking-widest transition-all select-none ${
-                    isActive
-                      ? 'text-text glow-text'
-                      : 'text-muted opacity-70 hover:opacity-100 hover:text-text'
-                  }`
-                }
+                className="select-none"
+                style={({ isActive }) => ({
+                  display: 'block',
+                  padding: '6px 16px',
+                  borderRadius: '12px',
+                  fontSize: '0.75rem',
+                  letterSpacing: '0.12em',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  textDecoration: 'none',
+                  transition: 'all 0.15s ease',
+                  color:      isActive ? '#00FF41' : 'rgba(0,204,53,0.5)',
+                  background: isActive ? 'rgba(0,255,65,0.1)' : 'transparent',
+                  textShadow: isActive ? '0 0 10px rgba(0,255,65,0.7)' : 'none',
+                  boxShadow:  isActive ? 'inset 0 0 0 1px rgba(0,255,65,0.18)' : 'none',
+                })}
               >
                 {label}
               </NavLink>
             ))}
+          </div>
 
+          {/* Right — auth */}
+          <div className="flex items-center gap-3">
             {!user ? (
               <NavLink
                 to="/login"
-                className={({ isActive }) =>
-                  `text-xs tracking-widest transition-all select-none ${
-                    isActive ? 'text-text glow-text' : 'text-muted opacity-70 hover:opacity-100 hover:text-text'
-                  }`
-                }
+                style={({ isActive }) => ({
+                  padding: '6px 18px',
+                  borderRadius: '12px',
+                  fontSize: '0.75rem',
+                  letterSpacing: '0.12em',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  textDecoration: 'none',
+                  border: '1px solid rgba(0,255,65,0.25)',
+                  color:      isActive ? '#00FF41' : 'rgba(0,204,53,0.6)',
+                  background: isActive ? 'rgba(0,255,65,0.08)' : 'transparent',
+                  textShadow: isActive ? '0 0 10px rgba(0,255,65,0.7)' : 'none',
+                  transition: 'all 0.15s',
+                })}
               >
                 login
               </NavLink>
             ) : (
               <Avatar />
             )}
-          </nav>
+          </div>
         </header>
 
         <Routes>
@@ -140,13 +164,16 @@ function App() {
   const [booted, setBooted] = useState(false)
 
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ConfigProvider>
-          <AppShell booted={booted} setBooted={setBooted} />
-        </ConfigProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <>
+      <CursorGlow />
+      <BrowserRouter>
+        <AuthProvider>
+          <ConfigProvider>
+            <AppShell booted={booted} setBooted={setBooted} />
+          </ConfigProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </>
   )
 }
 

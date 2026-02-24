@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import sessionRoutes from './routes/sessions.js'
+import snippetRoutes from './routes/snippets.js'
 import { validateSession } from './middleware/validate.js'
 import { errorHandler } from './middleware/errorHandler.js'
 
@@ -44,6 +45,7 @@ app.get('/api/health', (_req, res) => {
 // Inject validateSession only on POST /api/sessions
 app.post('/api/sessions', validateSession)
 app.use('/api/sessions', sessionRoutes)
+app.use('/api/snippets', snippetRoutes)
 
 // ── 404 handler ───────────────────────────────────────────
 app.use((_req, res) => {

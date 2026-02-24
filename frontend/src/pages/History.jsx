@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-const LANGS = ['all', 'javascript', 'python', 'java']
+const API_BASE = ''
+const LANGS = ['all', 'javascript', 'typescript', 'python', 'java', 'go', 'rust', 'c++']
 const SORTS = ['newest', 'top']
 
 function timeAgo(iso) {

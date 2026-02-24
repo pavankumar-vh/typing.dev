@@ -13,6 +13,18 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
+/* ─── Custom cursor (JS component — kills native cursor entirely) ─ */
+*, *::before, *::after,
+button, a, input, textarea, select, label, [role="button"] {
+  cursor: none !important;
+}
+
+/* ─── Cursor pulse (typing cursor blink) ────────────────── */
+@keyframes cursorPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
 /* ─── Reset ─────────────────────────────────────────────── */
 * {
   margin: 0;
@@ -148,4 +160,37 @@ button {
 button:hover {
   box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
 }
+
+/* ─── Leaderboard skeleton shimmer ──────────────────────── */
+@keyframes lb-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.lb-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0,100,0,0.10) 0%,
+    rgba(0,255,65,0.07) 40%,
+    rgba(0,100,0,0.10) 80%
+  );
+  background-size: 600px 100%;
+  animation: lb-shimmer 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+/* ─── Leaderboard podium rank pulse ─────────────────────── */
+@keyframes lb-rank-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ─── Leaderboard scrollbar ──────────────────────────────── */
+.lb-scroll::-webkit-scrollbar       { width: 4px; }
+.lb-scroll::-webkit-scrollbar-track { background: transparent; }
+.lb-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.15);
+  border-radius: 2px;
+}
+.lb-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,255,65,0.3); }
 

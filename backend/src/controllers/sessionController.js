@@ -43,18 +43,42 @@ export async function getSessions(req, res, next) {
 }
 
 // ── GET /api/sessions/leaderboard ────────────────────────
-// Top 10 WPM per language (includes displayName)
+// Top 10 best-per-user per language
 export async function getLeaderboard(req, res, next) {
   try {
-    const languages = ['javascript', 'python', 'java']
+    const languages = ['javascript', 'typescript', 'python', 'java', 'go', 'rust', 'c++']
 
     const leaderboard = await Promise.all(
       languages.map(async (lang) => {
-        const top = await Session.find({ language: lang })
-          .sort({ wpm: -1 })
-          .limit(10)
-          .select('wpm rawWpm accuracy errors duration snippetId createdAt userId displayName')
-          .lean()
+        // One entry per user: their personal best session for this language
+        const top = await Session.aggregate([
+          { $match: { language: lang, userId: { $ne: null } } },
+          { $sort: { wpm: -1 } },
+          {
+            $group: {
+              _id: { $ifNull: ['$userId', { $toString: '$_id' }] },
+              wpm:         { $first: '$wpm' },
+              rawWpm:      { $first: '$rawWpm' },
+              accuracy:    { $first: '$accuracy' },
+              errors:      { $first: '$errors' },
+              duration:    { $first: '$duration' },
+              snippetId:   { $first: '$snippetId' },
+              createdAt:   { $first: '$createdAt' },
+              userId:      { $first: '$userId' },
+              displayName: { $first: '$displayName' },
+            },
+          },
+          { $sort: { wpm: -1 } },
+          { $limit: 20 },
+          {
+            $project: {
+              _id: 0,
+              wpm: 1, rawWpm: 1, accuracy: 1, errors: 1,
+              duration: 1, snippetId: 1, createdAt: 1,
+              userId: 1, displayName: 1,
+            },
+          },
+        ])
         return { language: lang, entries: top }
       })
     )
@@ -72,13 +96,14 @@ export async function getUserLeaderboard(req, res, next) {
     const { language } = req.query
 
     const pipeline = [
-      ...(language ? [{ $match: { language: language.toLowerCase() } }] : []),
+      // only include sessions with a real logged-in userId
+      { $match: { ...(language ? { language: language.toLowerCase() } : {}), userId: { $ne: null } } },
       {
         $sort: { wpm: -1 },
       },
       {
         $group: {
-          _id: { $ifNull: ['$userId', { $toString: '$_id' }] },
+          _id: '$userId',
           displayName:   { $first: '$displayName' },
           userId:        { $first: '$userId' },
           topWpm:        { $max: '$wpm' },
