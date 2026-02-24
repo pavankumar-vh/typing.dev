@@ -8,14 +8,21 @@ import { errorHandler } from './middleware/errorHandler.js'
 const app = express()
 
 // ── Global middleware ─────────────────────────────────────
-const allowedOrigin = process.env.FRONTEND_URL
-  ? new RegExp(process.env.FRONTEND_URL)
-  : /^http:\/\/localhost:\d+$/  // allow any localhost port in dev
+// FRONTEND_URL can be a comma-separated list of allowed origins
+const rawOrigins = process.env.FRONTEND_URL || ''
+const allowedOrigins = rawOrigins
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
 
 app.use(cors({
   origin: (origin, cb) => {
-    // allow curl / server-to-server (no origin) and matching origins
-    if (!origin || allowedOrigin.test(origin)) return cb(null, true)
+    // allow curl / server-to-server (no origin header)
+    if (!origin) return cb(null, true)
+    // allow any localhost port in dev
+    if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true)
+    // allow explicitly listed origins
+    if (allowedOrigins.includes(origin)) return cb(null, true)
     cb(new Error(`CORS: origin ${origin} not allowed`))
   },
   methods: ['GET', 'POST'],
