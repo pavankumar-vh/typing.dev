@@ -169,7 +169,7 @@ export default function Home() {
   const handleKeyDown = useCallback((e) => {
     setCapsLock(e.getModifierState('CapsLock'))
 
-    if (e.key === 'Tab') { e.preventDefault(); loadNewSnippet(language, duration); return }
+    if (e.key === 'Tab') { e.preventDefault(); loadNewSnippet(language, duration, difficulty, codeFocus, snippetSize); return }
     if (phase === 'result') return
     if (e.key === 'Escape') { e.preventDefault(); resetState(undefined, duration); return }
 

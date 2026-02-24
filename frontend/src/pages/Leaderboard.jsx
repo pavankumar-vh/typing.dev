@@ -330,8 +330,8 @@ export default function Leaderboard() {
     setLoading(true)
     setError(null)
     Promise.all([
-      fetch(`${API_BASE}/api/sessions/leaderboard`).then(r => r.json()),
-      fetch(`${API_BASE}/api/sessions/leaderboard/users`).then(r => r.json()),
+      fetch(`${API_BASE}/api/sessions/leaderboard`).then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() }),
+      fetch(`${API_BASE}/api/sessions/leaderboard/users`).then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() }),
     ])
       .then(([lbRes, usersRes]) => {
         if (lbRes.success) {

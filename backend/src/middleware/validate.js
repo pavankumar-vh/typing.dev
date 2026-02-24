@@ -3,7 +3,7 @@ export function validateSession(req, res, next) {
   const { language, duration, wpm, rawWpm, accuracy, errors, snippetId } =
     req.body
 
-  const VALID_LANGUAGES = ['javascript', 'python', 'java']
+  const VALID_LANGUAGES = ['javascript', 'typescript', 'python', 'java', 'go', 'rust', 'c++']
   const VALID_DURATIONS = [15, 30, 60, 120]
 
   const missing = []

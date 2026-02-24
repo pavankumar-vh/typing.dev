@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { getSnippet } from '../utils/snippetApi.js'
-import { calculateWPM as calculateCPM, calculateAccuracy } from '../utils/metrics.js'
-import TypingCanvas from '../components/TypingCanvas.jsx'
-import MetricsBar from '../components/MetricsBar.jsx'
+import { calculateWPM, calculateAccuracy } from '../utils/metrics.js'
 
 export default function Train() {
   const location = useLocation()
@@ -65,16 +63,16 @@ export default function Train() {
   useEffect(() => {
     if (!metrics.startTime) return
     const elapsed = Date.now() - metrics.startTime
-    setCpm(calculateCPM(metrics.totalTyped, elapsed))
+    setCpm(calculateWPM(metrics.totalTyped, elapsed))
     setAccuracy(calculateAccuracy(metrics.correctChars, metrics.totalTyped))
   }, [metrics])
 
   // Navigate to result when session ends
   useEffect(() => {
     if (sessionDone) {
-      navigate('/result', {
+      navigate('/', {
         state: {
-          cpm,
+          wpm: cpm,
           accuracy,
           errors: metrics.errors,
           duration,
@@ -99,8 +97,8 @@ export default function Train() {
     return (
       <div className="max-w-3xl mx-auto mt-8 text-xs tracking-widest">
         <p className="text-error mb-4">&gt; ERROR: {snippetError}</p>
-        <button onClick={() => navigate('/setup')} className="border border-divider text-muted px-4 py-2 hover:text-text hover:border-muted transition-all">
-          [ BACK TO SETUP ]
+        <button onClick={() => navigate('/')} className="border border-divider text-muted px-4 py-2 hover:text-text hover:border-muted transition-all">
+          [ BACK ]
         </button>
       </div>
     )
@@ -117,22 +115,21 @@ export default function Train() {
         {'  '}STATUS:<span className="text-success glow-text">ACTIVE</span>
       </p>
 
-      <MetricsBar
-        cpm={cpm}
-        accuracy={accuracy}
-        errors={metrics.errors}
-        timeRemaining={timeRemaining}
-      />
+      {/* Metrics strip */}
+      <div className="flex gap-8 text-xs tracking-widest mb-4 text-muted">
+        <span>WPM: <span className="text-text glow-text">{cpm}</span></span>
+        <span>ACC: <span className="text-text">{accuracy}%</span></span>
+        <span>ERR: <span className="text-text">{metrics.errors}</span></span>
+        <span>TIME: <span className="text-text">{timeRemaining}s</span></span>
+      </div>
 
       <div className="text-muted text-xs mb-2 tracking-widest">
         &gt; SNIPPET LOADED — BEGIN TYPING
       </div>
       <div className="bg-panel p-8 border border-divider">
-        <TypingCanvas
-          targetText={snippet.content}
-          disabled={sessionDone}
-          onMetricsUpdate={handleMetricsUpdate}
-        />
+        <pre className="text-text whitespace-pre-wrap font-mono text-sm leading-relaxed select-none">
+          {snippet.content}
+        </pre>
       </div>
 
       <p className="text-muted text-xs mt-4 blink">

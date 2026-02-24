@@ -159,9 +159,9 @@ export default function MyStats() {
   useEffect(() => {
     if (!user) { setLoading(false); return }
     Promise.all([
-      fetch(`${API_BASE}/api/sessions/stats?userId=${user.uid}`).then(r => r.json()).catch(() => null),
-      fetch(`${API_BASE}/api/sessions?userId=${user.uid}&limit=30&sort=newest`).then(r => r.json()).catch(() => null),
-      fetch(`${API_BASE}/api/sessions/leaderboard/users`).then(r => r.json()).catch(() => null),
+      fetch(`${API_BASE}/api/sessions/stats?userId=${user.uid}`).then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() }).catch(() => null),
+      fetch(`${API_BASE}/api/sessions?userId=${user.uid}&limit=30&sort=newest`).then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() }).catch(() => null),
+      fetch(`${API_BASE}/api/sessions/leaderboard/users`).then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() }).catch(() => null),
     ]).then(([statsRes, histRes, lbRes]) => {
       if (statsRes?.success) setStats(statsRes.data)
       if (histRes?.success)  setHistory(histRes.data ?? [])
