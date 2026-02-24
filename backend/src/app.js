@@ -8,22 +8,18 @@ import { errorHandler } from './middleware/errorHandler.js'
 const app = express()
 
 // ── Global middleware ─────────────────────────────────────
-// Strict CORS — only allow known frontend origins.
-// Add extra origins via FRONTEND_URL (comma-separated) on the server.
-const BUILT_IN_ORIGINS = [
-  'https://typingdotdev.vercel.app',
-]
-
-const extraOrigins = (process.env.FRONTEND_URL || '')
-  .split(',').map((s) => s.trim()).filter(Boolean)
-
-const ALLOWED_ORIGINS = new Set([...BUILT_IN_ORIGINS, ...extraOrigins])
+// Strict CORS — set FRONTEND_URL on the server (comma-separated for multiple).
+// e.g. FRONTEND_URL=https://typingdotdev.vercel.app,https://typingdotdev-git-main-pavan.vercel.app
+const allowedOrigins = new Set(
+  (process.env.FRONTEND_URL || '')
+    .split(',').map((s) => s.trim()).filter(Boolean)
+)
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true)                          // curl / server-to-server
-    if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true)  // local dev
-    if (ALLOWED_ORIGINS.has(origin)) return cb(null, true)
+    if (!origin) return cb(null, true)                                  // curl / server-to-server
+    if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true) // local dev
+    if (allowedOrigins.has(origin)) return cb(null, true)
     cb(new Error(`CORS: origin ${origin} not allowed`))
   },
   methods: ['GET', 'POST'],
