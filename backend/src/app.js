@@ -8,8 +8,26 @@ import { errorHandler } from './middleware/errorHandler.js'
 const app = express()
 
 // ── Global middleware ─────────────────────────────────────
-// Public API — allow all origins (typing game, no sensitive server-side data)
-app.use(cors())
+// Strict CORS — only allow known frontend origins.
+// Add extra origins via FRONTEND_URL (comma-separated) on the server.
+const BUILT_IN_ORIGINS = [
+  'https://typingdotdev.vercel.app',
+]
+
+const extraOrigins = (process.env.FRONTEND_URL || '')
+  .split(',').map((s) => s.trim()).filter(Boolean)
+
+const ALLOWED_ORIGINS = new Set([...BUILT_IN_ORIGINS, ...extraOrigins])
+
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true)                          // curl / server-to-server
+    if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true)  // local dev
+    if (ALLOWED_ORIGINS.has(origin)) return cb(null, true)
+    cb(new Error(`CORS: origin ${origin} not allowed`))
+  },
+  methods: ['GET', 'POST'],
+}))
 app.use(express.json())
 
 // Request logger (dev only)
