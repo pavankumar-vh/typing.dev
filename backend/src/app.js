@@ -15,15 +15,20 @@ const allowedOrigins = new Set(
 )
 console.log('[cors] allowed origins:', allowedOrigins.size ? [...allowedOrigins] : '⚠ NONE — set FRONTEND_URL env var')
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, cb) => {
     if (!origin) return cb(null, true)                                  // curl / server-to-server
     if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true) // local dev
     if (allowedOrigins.has(origin)) return cb(null, true)
     cb(new Error(`CORS: origin ${origin} not allowed`))
   },
-  methods: ['GET', 'POST'],
-}))
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false,
+}
+
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions)) // handle preflight for all routes
 app.use(express.json())
 
 // Request logger (dev only)
