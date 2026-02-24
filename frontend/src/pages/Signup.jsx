@@ -2,11 +2,60 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
-function TerminalLine({ children, dim }) {
+function InputField({ label, type, value, onChange, placeholder, autoFocus, autoComplete, hint }) {
+  const [focused, setFocused] = useState(false)
   return (
-    <p className={`text-xs tracking-widest select-none mb-1 ${dim ? 'opacity-30' : 'opacity-60'} text-muted`}>
-      {children}
-    </p>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <label className="text-xs tracking-[0.25em] uppercase transition-all"
+          style={{ color: focused ? '#00FF41' : 'rgba(0,255,65,0.4)' }}>
+          {label}
+        </label>
+        {hint && <span className="text-xs" style={{ color: 'rgba(0,255,65,0.3)' }}>{hint}</span>}
+      </div>
+      <input
+        type={type}
+        autoComplete={autoComplete}
+        autoFocus={autoFocus}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        placeholder={placeholder}
+        className="bg-transparent text-text tracking-wide outline-none py-2 text-sm w-full placeholder:opacity-20 placeholder:text-muted transition-all"
+        style={{
+          borderBottom: `1px solid ${focused ? '#00FF41' : 'rgba(0,255,65,0.2)'}`,
+          boxShadow: focused ? '0 1px 0 0 rgba(0,255,65,0.3)' : 'none',
+          caretColor: '#00FF41',
+        }}
+      />
+    </div>
+  )
+}
+
+function PasswordStrength({ password }) {
+  const score = Math.min(
+    (password.length >= 8 ? 1 : 0) +
+    (/[A-Z]/.test(password) ? 1 : 0) +
+    (/[0-9]/.test(password) ? 1 : 0) +
+    (/[^A-Za-z0-9]/.test(password) ? 1 : 0),
+    4
+  )
+  const labels = ['', 'weak', 'fair', 'good', 'strong']
+  const colors = ['', '#FF4444', '#FF8800', '#FFCC00', '#00FF41']
+  if (!password) return null
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex gap-1 flex-1">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="h-0.5 flex-1 transition-all"
+            style={{ background: i <= score ? colors[score] : 'rgba(0,255,65,0.1)' }} />
+        ))}
+      </div>
+      <span className="text-xs tracking-widest" style={{ color: colors[score], minWidth: '3rem', textAlign: 'right' }}>
+        {labels[score]}
+      </span>
+    </div>
   )
 }
 
@@ -20,6 +69,7 @@ export default function Signup() {
   const [confirm, setConfirm]         = useState('')
   const [error, setError]             = useState('')
   const [loading, setLoading]         = useState(false)
+  const [dots, setDots]               = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -34,6 +84,7 @@ export default function Signup() {
     }
     setError('')
     setLoading(true)
+    const iv = setInterval(() => setDots(d => d.length >= 3 ? '' : d + '.'), 400)
     try {
       await signup(email, password, displayName.trim())
       navigate('/')
@@ -47,121 +98,124 @@ export default function Signup() {
         : err.message?.toLowerCase() || 'signup failed'
       setError(msg)
     } finally {
+      clearInterval(iv)
       setLoading(false)
+      setDots('')
     }
   }
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm">
+  const passwordsMatch = confirm.length > 0 && password === confirm
+  const passwordsMismatch = confirm.length > 0 && password !== confirm
 
-        {/* Terminal header */}
-        <div className="mb-10">
-          <p className="text-xl glow-text text-text font-bold tracking-[0.15em] mb-4">
-            &gt;_ typing.dev
-          </p>
-          <TerminalLine>system: create new account</TerminalLine>
-          <TerminalLine>scores will be saved under your profile</TerminalLine>
-          <TerminalLine dim>─────────────────────────────</TerminalLine>
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6"
+      style={{ background: 'radial-gradient(ellipse at center, rgba(0,255,65,0.03) 0%, transparent 70%)' }}>
+
+      {/* Outer card */}
+      <div className="w-full max-w-sm" style={{
+        border: '1px solid rgba(0,255,65,0.12)',
+        background: 'rgba(0,255,65,0.02)',
+        padding: '2.5rem 2rem',
+        boxShadow: '0 0 40px rgba(0,255,65,0.05), inset 0 0 40px rgba(0,0,0,0.2)',
+      }}>
+
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-5">
+            <span className="text-2xl font-bold tracking-[0.15em] glow-text" style={{ color: '#00FF41' }}>&gt;_</span>
+            <span className="text-lg font-bold tracking-[0.15em] text-text">typing.dev</span>
+          </div>
+          <div style={{ borderLeft: '2px solid rgba(0,255,65,0.3)', paddingLeft: '0.75rem' }}>
+            <p className="text-xs tracking-widest mb-1" style={{ color: 'rgba(0,255,65,0.5)' }}>system: create new account</p>
+            <p className="text-xs tracking-widest" style={{ color: 'rgba(0,255,65,0.3)' }}>scores saved to your profile</p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-7">
+        {/* Divider */}
+        <div className="mb-8" style={{ height: '1px', background: 'linear-gradient(to right, rgba(0,255,65,0.2), transparent)' }} />
 
-          {/* Display Name */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs tracking-[0.25em] text-muted opacity-50 uppercase">
-              display name
-            </label>
-            <input
-              type="text"
-              autoFocus
-              maxLength={24}
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="how you appear on leaderboard"
-              className="bg-transparent border-b text-text tracking-wide outline-none py-2 text-base w-full placeholder:opacity-20 placeholder:text-muted"
-              style={{ borderColor: 'rgba(0,255,65,0.3)', caretColor: '#00FF41' }}
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
-          {/* Email */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs tracking-[0.25em] text-muted opacity-50 uppercase">
-              email
-            </label>
-            <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@domain.com"
-              className="bg-transparent border-b text-text tracking-wide outline-none py-2 text-base w-full placeholder:opacity-20 placeholder:text-muted"
-              style={{ borderColor: 'rgba(0,255,65,0.3)', caretColor: '#00FF41' }}
-            />
-          </div>
+          <InputField
+            label="display name"
+            type="text"
+            autoFocus
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value.slice(0, 24))}
+            placeholder="appears on leaderboard"
+            hint={displayName ? `${displayName.length}/24` : ''}
+          />
 
-          {/* Password */}
+          <InputField
+            label="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="user@domain.com"
+          />
+
           <div className="flex flex-col gap-2">
-            <label className="text-xs tracking-[0.25em] text-muted opacity-50 uppercase">
-              password
-            </label>
-            <input
+            <InputField
+              label="password"
               type="password"
               autoComplete="new-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               placeholder="min 6 characters"
-              className="bg-transparent border-b text-text tracking-wide outline-none py-2 text-base w-full placeholder:opacity-20 placeholder:text-muted"
-              style={{ borderColor: 'rgba(0,255,65,0.3)', caretColor: '#00FF41' }}
             />
+            <PasswordStrength password={password} />
           </div>
 
-          {/* Confirm */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs tracking-[0.25em] text-muted opacity-50 uppercase">
-              confirm password
-            </label>
-            <input
+            <InputField
+              label="confirm password"
               type="password"
               autoComplete="new-password"
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              onChange={e => setConfirm(e.target.value)}
               placeholder="••••••••"
-              className="bg-transparent border-b text-text tracking-wide outline-none py-2 text-base w-full placeholder:opacity-20 placeholder:text-muted"
-              style={{ borderColor: 'rgba(0,255,65,0.3)', caretColor: '#00FF41' }}
             />
+            {passwordsMatch && (
+              <p className="text-xs tracking-widest" style={{ color: '#00FF41' }}>✓ passwords match</p>
+            )}
+            {passwordsMismatch && (
+              <p className="text-xs tracking-widest" style={{ color: '#FF4444' }}>✗ passwords do not match</p>
+            )}
           </div>
 
           {/* Error */}
           {error && (
-            <p
-              className="text-xs tracking-widest py-3 px-4"
-              style={{ background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.25)', color: '#FF4444' }}
-            >
-              &gt; error: {error}
-            </p>
+            <div className="text-xs tracking-widest py-2.5 px-3 flex items-start gap-2"
+              style={{ background: 'rgba(255,68,68,0.06)', border: '1px solid rgba(255,68,68,0.2)', color: '#FF4444' }}>
+              <span className="opacity-60 shrink-0">!</span>
+              <span>{error}</span>
+            </div>
           )}
 
           {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="text-sm tracking-widest py-3 font-bold transition-all mt-2 text-bg disabled:opacity-40"
-            style={{ background: '#00FF41', boxShadow: loading ? 'none' : '0 0 16px rgba(0,255,65,0.45)' }}
+            className="text-sm tracking-[0.2em] py-3 font-bold transition-all mt-1 uppercase disabled:opacity-40 cursor-pointer"
+            style={{
+              background: loading ? 'rgba(0,255,65,0.15)' : '#00FF41',
+              color: loading ? '#00FF41' : '#000',
+              border: loading ? '1px solid rgba(0,255,65,0.4)' : '1px solid #00FF41',
+              boxShadow: loading ? 'none' : '0 0 20px rgba(0,255,65,0.3)',
+            }}
           >
-            {loading ? 'creating account...' : 'create account'}
+            {loading ? `initializing${dots}` : 'create account'}
           </button>
 
         </form>
 
         {/* Footer */}
-        <div className="mt-10 pt-6" style={{ borderTop: '1px solid rgba(0,255,65,0.1)' }}>
-          <TerminalLine>already have an account?</TerminalLine>
-          <Link
-            to="/login"
-            className="text-xs tracking-widest text-text glow-text hover:opacity-80 transition-all"
-          >
-            &gt; login
+        <div className="mt-8 pt-6 flex items-center justify-between" style={{ borderTop: '1px solid rgba(0,255,65,0.08)' }}>
+          <span className="text-xs tracking-widest" style={{ color: 'rgba(0,255,65,0.35)' }}>have an account?</span>
+          <Link to="/login" className="text-xs tracking-widest transition-all hover:opacity-80"
+            style={{ color: '#00FF41', textShadow: '0 0 8px rgba(0,255,65,0.4)' }}>
+            login →
           </Link>
         </div>
 
