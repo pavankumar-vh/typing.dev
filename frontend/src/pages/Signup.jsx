@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 function InputField({ label, type, value, onChange, placeholder, autoFocus, autoComplete, hint }) {
   const [focused, setFocused] = useState(false)
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
         <label className="text-xs tracking-[0.25em] uppercase transition-all"
           style={{ color: focused ? '#00FF41' : 'rgba(0,255,65,0.4)' }}>
@@ -22,7 +22,7 @@ function InputField({ label, type, value, onChange, placeholder, autoFocus, auto
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         placeholder={placeholder}
-        className="bg-transparent text-text tracking-wide outline-none py-2 text-sm w-full placeholder:opacity-20 placeholder:text-muted transition-all"
+        className="bg-transparent text-text tracking-wide outline-none py-2.5 text-sm w-full placeholder:opacity-20 placeholder:text-muted transition-all"
         style={{
           borderBottom: `1px solid ${focused ? '#00FF41' : 'rgba(0,255,65,0.2)'}`,
           boxShadow: focused ? '0 1px 0 0 rgba(0,255,65,0.3)' : 'none',
@@ -113,28 +113,28 @@ export default function Signup() {
 
       {/* Outer card */}
       <div className="w-full max-w-sm" style={{
-        border: '1px solid rgba(0,255,65,0.12)',
+        border: '1px solid rgba(0,255,65,0.15)',
         background: 'rgba(0,255,65,0.02)',
-        padding: '2.5rem 2rem',
-        boxShadow: '0 0 40px rgba(0,255,65,0.05), inset 0 0 40px rgba(0,0,0,0.2)',
+        padding: '3rem 2.5rem',
+        boxShadow: '0 0 60px rgba(0,255,65,0.06), inset 0 0 40px rgba(0,0,0,0.2)',
       }}>
 
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-5">
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-6">
             <span className="text-2xl font-bold tracking-[0.15em] glow-text" style={{ color: '#00FF41' }}>&gt;_</span>
             <span className="text-lg font-bold tracking-[0.15em] text-text">typing.dev</span>
           </div>
-          <div style={{ borderLeft: '2px solid rgba(0,255,65,0.3)', paddingLeft: '0.75rem' }}>
-            <p className="text-xs tracking-widest mb-1" style={{ color: 'rgba(0,255,65,0.5)' }}>system: create new account</p>
+          <div style={{ borderLeft: '2px solid rgba(0,255,65,0.3)', paddingLeft: '0.875rem' }}>
+            <p className="text-xs tracking-widest mb-2" style={{ color: 'rgba(0,255,65,0.55)' }}>system: create new account</p>
             <p className="text-xs tracking-widest" style={{ color: 'rgba(0,255,65,0.3)' }}>scores saved to your profile</p>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="mb-8" style={{ height: '1px', background: 'linear-gradient(to right, rgba(0,255,65,0.2), transparent)' }} />
+        <div className="mb-10" style={{ height: '1px', background: 'linear-gradient(to right, rgba(0,255,65,0.25), transparent)' }} />
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
           <InputField
             label="display name"
@@ -155,7 +155,7 @@ export default function Signup() {
             placeholder="user@domain.com"
           />
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <InputField
               label="password"
               type="password"
@@ -167,7 +167,7 @@ export default function Signup() {
             <PasswordStrength password={password} />
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <InputField
               label="confirm password"
               type="password"
@@ -197,7 +197,7 @@ export default function Signup() {
           <button
             type="submit"
             disabled={loading}
-            className="text-sm tracking-[0.2em] py-3 font-bold transition-all mt-1 uppercase disabled:opacity-40 cursor-pointer"
+            className="text-sm tracking-[0.2em] py-3.5 font-bold transition-all mt-2 uppercase disabled:opacity-40 cursor-pointer"
             style={{
               background: loading ? 'rgba(0,255,65,0.15)' : '#00FF41',
               color: loading ? '#00FF41' : '#000',
@@ -211,7 +211,7 @@ export default function Signup() {
         </form>
 
         {/* Footer */}
-        <div className="mt-8 pt-6 flex items-center justify-between" style={{ borderTop: '1px solid rgba(0,255,65,0.08)' }}>
+        <div className="mt-10 pt-7 flex items-center justify-between" style={{ borderTop: '1px solid rgba(0,255,65,0.1)' }}>
           <span className="text-xs tracking-widest" style={{ color: 'rgba(0,255,65,0.35)' }}>have an account?</span>
           <Link to="/login" className="text-xs tracking-widest transition-all hover:opacity-80"
             style={{ color: '#00FF41', textShadow: '0 0 8px rgba(0,255,65,0.4)' }}>
