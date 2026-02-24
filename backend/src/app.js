@@ -9,11 +9,11 @@ const app = express()
 
 // ── Global middleware ─────────────────────────────────────
 // Strict CORS — set FRONTEND_URL on the server (comma-separated for multiple).
-// e.g. FRONTEND_URL=https://typingdotdev.vercel.app,https://typingdotdev-git-main-pavan.vercel.app
 const allowedOrigins = new Set(
   (process.env.FRONTEND_URL || '')
     .split(',').map((s) => s.trim()).filter(Boolean)
 )
+console.log('[cors] allowed origins:', allowedOrigins.size ? [...allowedOrigins] : '⚠ NONE — set FRONTEND_URL env var')
 
 app.use(cors({
   origin: (origin, cb) => {
