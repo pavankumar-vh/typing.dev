@@ -5,7 +5,7 @@ import { useConfig, LANGUAGES, DURATIONS } from '../context/ConfigContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 const FONT     = 'JetBrains Mono, monospace'
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 const AVATAR_COLORS = ['#00FF41','#39FF14','#00FFCC','#FFD700','#FF6B6B','#C77DFF','#48CAE4','#F8961E']
 

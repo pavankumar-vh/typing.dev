@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext.jsx'
 
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 const LANGS = ['javascript', 'typescript', 'python', 'java', 'go', 'rust', 'c++']
 const LANG_BADGE = {

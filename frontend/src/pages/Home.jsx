@@ -10,7 +10,7 @@ import {
 } from '../utils/metrics.js'
 import { useConfig, LANGUAGES, DURATIONS, DIFFICULTIES, CODE_FOCUS, SNIPPET_SIZES, LANG_API_MAP, LANG_BADGE } from '../context/ConfigContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_API_URL || ''
 const MAX_ERRORS_AHEAD = 8   // monkeytype-style error cap
 const LINE_H = 40            // px — must match lineHeight style on text div
 const VISIBLE_LINES = 3

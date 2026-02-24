@@ -171,7 +171,7 @@ function LangDetailPanel({ stat }) {
   )
 }
 
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_API_URL || ''
 const LANG_ORDER = ['javascript', 'typescript', 'python', 'java', 'go', 'rust', 'c++']
 const LANG_BADGE = {
   javascript: 'JS', typescript: 'TS', python: 'PY',

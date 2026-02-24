@@ -7,7 +7,7 @@
 
 import { getRandomSnippet } from '../data/snippets.js'
 
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 /**
  * Fetch a generated snippet from the backend (Gemini).
