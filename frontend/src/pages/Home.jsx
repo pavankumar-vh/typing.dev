@@ -169,7 +169,51 @@ export default function Home() {
   const handleKeyDown = useCallback((e) => {
     setCapsLock(e.getModifierState('CapsLock'))
 
-    if (e.key === 'Tab') { e.preventDefault(); loadNewSnippet(language, duration, difficulty, codeFocus, snippetSize); return }
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      // During an active test, Tab acts as indentation — type the spaces in the snippet
+      if (phase === 'active' && snippet && !blocked) {
+        const pos = typedRef.current.length
+        const content = snippet.content
+        if (pos < content.length && (content[pos] === ' ' || content[pos] === '\t')) {
+          const isTab = content[pos] === '\t'
+          setTyped((prev) => {
+            if (prev.length >= content.length) return prev
+            let next = [...prev]
+            if (isTab) {
+              // Literal tab char in snippet
+              next = [...next, { char: '\t', correct: true, ts: Date.now() }]
+            } else {
+              // Count consecutive spaces for this indent block (up to 4)
+              let spaces = 0
+              while (spaces < 4 && (prev.length + spaces) < content.length && content[prev.length + spaces] === ' ') {
+                spaces++
+              }
+              for (let i = 0; i < spaces; i++) {
+                next = [...next, { char: ' ', correct: true, ts: Date.now() }]
+              }
+            }
+            typedRef.current = next
+            updateMetrics(next)
+            let trailing = 0
+            for (let i = next.length - 1; i >= 0; i--) {
+              if (!next[i].correct) trailing++; else break
+            }
+            setBlocked(trailing >= MAX_ERRORS_AHEAD)
+            if (next.length === content.length) {
+              clearInterval(timerRef.current)
+              setTimeout(() => finalize(next), 0)
+            }
+            return next
+          })
+        }
+        // Tab at a non-space position: do nothing (don't reset the test)
+        return
+      }
+      // Idle / result phase: Tab loads a new snippet (original behaviour)
+      loadNewSnippet(language, duration, difficulty, codeFocus, snippetSize)
+      return
+    }
     if (phase === 'result') return
     if (e.key === 'Escape') { e.preventDefault(); resetState(undefined, duration); return }
 
