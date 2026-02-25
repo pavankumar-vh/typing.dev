@@ -84,7 +84,7 @@ export default function Login() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className="w-full"
-        style={{ maxWidth: '440px' }}
+        style={{ maxWidth: '520px' }}
       >
 
         {/* Window chrome */}
@@ -103,12 +103,12 @@ export default function Login() {
         <div style={{
           border: '1px solid rgba(0,255,65,0.14)',
           background: 'linear-gradient(160deg, rgba(0,255,65,0.025) 0%, rgba(0,0,0,0) 100%)',
-          padding: '4rem 3.5rem',
+          padding: '3.5rem 4rem',
           boxShadow: '0 0 100px rgba(0,255,65,0.04), 0 1px 0 0 rgba(0,255,65,0.1) inset',
         }}>
 
           {/* Header */}
-          <div className="mb-14">
+          <div className="mb-10">
             <p className="text-xs tracking-[0.35em] uppercase mb-4" style={{ color: 'rgba(0,255,65,0.3)' }}>
               system: authenticate
             </p>
@@ -119,7 +119,7 @@ export default function Login() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-12">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-9">
 
             <Field label="email address" type="email" autoFocus autoComplete="email"
               value={email} onChange={e => setEmail(e.target.value)} placeholder="user@domain.com" />
@@ -168,7 +168,7 @@ export default function Login() {
           </form>
 
           {/* Footer */}
-          <div className="mt-14 pt-8 flex items-center justify-between" style={{ borderTop: '1px solid rgba(0,255,65,0.07)' }}>
+          <div className="mt-10 pt-7 flex items-center justify-between" style={{ borderTop: '1px solid rgba(0,255,65,0.07)' }}>
             <span className="text-xs tracking-widest" style={{ color: 'rgba(0,255,65,0.28)' }}>
               no account yet?
             </span>

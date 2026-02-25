@@ -61,10 +61,10 @@ function StatStrip({ items }) {
           flex:1, padding:'13px 12px', textAlign:'center',
           borderRight: i<items.length-1 ? '1px solid rgba(0,70,0,0.25)' : 'none',
         }}>
-          <div style={{ fontFamily:FONT, fontSize:20, fontWeight:700, lineHeight:1, color:'#00FF41', textShadow:'0 0 14px rgba(0,255,65,0.55)' }}>
+          <div style={{ fontFamily:FONT, fontSize:22, fontWeight:700, lineHeight:1, color:'#00FF41', textShadow:'0 0 14px rgba(0,255,65,0.55)' }}>
             {it.value ?? '—'}
           </div>
-          <div style={{ fontFamily:FONT, fontSize:8, marginTop:5, color:'rgba(0,204,53,0.3)', letterSpacing:'0.14em', textTransform:'uppercase' }}>
+          <div style={{ fontFamily:FONT, fontSize:10, marginTop:5, color:'rgba(0,204,53,0.3)', letterSpacing:'0.14em', textTransform:'uppercase' }}>
             {it.label}
           </div>
         </div>
@@ -92,14 +92,14 @@ function BigStatGrid({ items }) {
           borderRight: i%cols!==cols-1 ? '1px solid rgba(0,60,0,0.2)' : 'none',
           borderBottom: i<items.length-cols ? '1px solid rgba(0,60,0,0.2)' : 'none',
         }}>
-          <div style={{ fontFamily:FONT, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.28)', marginBottom:7 }}>
+          <div style={{ fontFamily:FONT, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.28)', marginBottom:7 }}>
             {it.label}
           </div>
-          <div style={{ fontFamily:FONT, fontSize:26, fontWeight:700, lineHeight:1, color:'#00FF41', textShadow:'0 0 12px rgba(0,255,65,0.4)' }}>
+          <div style={{ fontFamily:FONT, fontSize:28, fontWeight:700, lineHeight:1, color:'#00FF41', textShadow:'0 0 12px rgba(0,255,65,0.4)' }}>
             {fmt(it.value)}
           </div>
           {it.sub && (
-            <div style={{ fontFamily:FONT, fontSize:8, marginTop:4, color:'rgba(0,204,53,0.2)', letterSpacing:'0.09em' }}>{it.sub}</div>
+            <div style={{ fontFamily:FONT, fontSize:10, marginTop:4, color:'rgba(0,204,53,0.2)', letterSpacing:'0.09em' }}>{it.sub}</div>
           )}
         </div>
       ))}
@@ -131,23 +131,23 @@ function DurationCards({ sessions }) {
           background: s.count > 0 ? 'rgba(0,8,0,0.7)' : 'rgba(0,5,0,0.4)',
           textAlign:'center',
         }}>
-          <div style={{ fontFamily:FONT, fontSize:9, letterSpacing:'0.15em', color:'rgba(0,204,53,0.28)', textTransform:'uppercase', marginBottom:8 }}>
+          <div style={{ fontFamily:FONT, fontSize:11, letterSpacing:'0.15em', color:'rgba(0,204,53,0.28)', textTransform:'uppercase', marginBottom:8 }}>
             {s.dur}s
           </div>
           {s.count > 0 ? (
             <>
-              <div style={{ fontFamily:FONT, fontSize:28, fontWeight:700, lineHeight:1, color:'#00FF41', textShadow:'0 0 14px rgba(0,255,65,0.5)' }}>
+              <div style={{ fontFamily:FONT, fontSize:30, fontWeight:700, lineHeight:1, color:'#00FF41', textShadow:'0 0 14px rgba(0,255,65,0.5)' }}>
                 {s.best}
               </div>
-              <div style={{ fontFamily:FONT, fontSize:9, color:'rgba(0,204,53,0.35)', marginTop:5 }}>
+              <div style={{ fontFamily:FONT, fontSize:11, color:'rgba(0,204,53,0.35)', marginTop:5 }}>
                 {s.avgAcc}%
               </div>
-              <div style={{ fontFamily:FONT, fontSize:8, color:'rgba(0,204,53,0.2)', marginTop:2, letterSpacing:'0.08em' }}>
+              <div style={{ fontFamily:FONT, fontSize:10, color:'rgba(0,204,53,0.2)', marginTop:2, letterSpacing:'0.08em' }}>
                 {s.count} test{s.count!==1?'s':''}
               </div>
             </>
           ) : (
-            <div style={{ fontFamily:FONT, fontSize:12, color:'rgba(0,204,53,0.15)', marginTop:4 }}>—</div>
+            <div style={{ fontFamily:FONT, fontSize:14, color:'rgba(0,204,53,0.15)', marginTop:4 }}>—</div>
           )}
         </div>
       ))}
@@ -164,13 +164,13 @@ function LangRow({ lang, topWpm, avgWpm, avgAccuracy, totalSessions, maxWpm }) {
       alignItems:'center', gap:12, padding:'10px 0',
       borderBottom:'1px solid rgba(0,50,0,0.2)',
     }}>
-      <div style={{ fontFamily:FONT, fontSize:11, color:'rgba(0,204,53,0.7)', letterSpacing:'0.06em' }}>{lang}</div>
+      <div style={{ fontFamily:FONT, fontSize:13, color:'rgba(0,204,53,0.7)', letterSpacing:'0.06em' }}>{lang}</div>
       <div style={{ height:4, borderRadius:2, background:'rgba(0,40,0,0.5)', overflow:'hidden' }}>
         <div style={{ height:'100%', width:`${pct}%`, background:'#00FF41', boxShadow:'0 0 6px rgba(0,255,65,0.4)', borderRadius:2 }} />
       </div>
-      <div style={{ fontFamily:FONT, fontSize:13, fontWeight:700, color:'#00FF41', textAlign:'right' }}>{topWpm}</div>
-      <div style={{ fontFamily:FONT, fontSize:11, color:'rgba(0,204,53,0.45)', textAlign:'right' }}>{avgWpm}</div>
-      <div style={{ fontFamily:FONT, fontSize:11, color:'rgba(0,204,53,0.35)', textAlign:'right' }}>{avgAccuracy}%</div>
+      <div style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:'#00FF41', textAlign:'right' }}>{topWpm}</div>
+      <div style={{ fontFamily:FONT, fontSize:13, color:'rgba(0,204,53,0.45)', textAlign:'right' }}>{avgWpm}</div>
+      <div style={{ fontFamily:FONT, fontSize:13, color:'rgba(0,204,53,0.35)', textAlign:'right' }}>{avgAccuracy}%</div>
     </div>
   )
 }
@@ -277,11 +277,11 @@ function ActivityHeatmap({ sessions, loading }) {
       {/* ── header row ── */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:14, flexWrap:'wrap', gap:8 }}>
         <div>
-          <div style={{ fontFamily:FONT, fontSize:9, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(0,204,53,0.3)', marginBottom:10 }}>activity</div>
+          <div style={{ fontFamily:FONT, fontSize:11, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(0,204,53,0.3)', marginBottom:10 }}>activity</div>
           <div style={{ display:'flex', gap:4 }}>
             {RANGE_OPTS.map(o => (
               <button key={o.weeks} onClick={() => setWeeks(o.weeks)} style={{
-                fontFamily:FONT, fontSize:8, letterSpacing:'0.1em', padding:'4px 10px',
+                fontFamily:FONT, fontSize:10, letterSpacing:'0.1em', padding:'4px 10px',
                 cursor:'pointer', borderRadius:4,
                 border: weeks===o.weeks ? '1px solid rgba(0,255,65,0.4)' : '1px solid rgba(0,60,0,0.25)',
                 background: weeks===o.weeks ? 'rgba(0,255,65,0.08)' : 'transparent',
@@ -299,10 +299,10 @@ function ActivityHeatmap({ sessions, loading }) {
             { label:'best streak',    value: longestStreak ? `${longestStreak}d` : '—' },
           ].map(s => (
             <div key={s.label} style={{ textAlign:'right' }}>
-              <div style={{ fontFamily:FONT, fontSize:14, fontWeight:700, color:'#00FF41', textShadow:'0 0 10px rgba(0,255,65,0.45)', lineHeight:1 }}>
+              <div style={{ fontFamily:FONT, fontSize:16, fontWeight:700, color:'#00FF41', textShadow:'0 0 10px rgba(0,255,65,0.45)', lineHeight:1 }}>
                 {s.value}
               </div>
-              <div style={{ fontFamily:FONT, fontSize:7, color:'rgba(0,204,53,0.26)', letterSpacing:'0.12em', textTransform:'uppercase', marginTop:3 }}>
+              <div style={{ fontFamily:FONT, fontSize:9, color:'rgba(0,204,53,0.26)', letterSpacing:'0.12em', textTransform:'uppercase', marginTop:3 }}>
                 {s.label}
               </div>
             </div>
@@ -324,7 +324,7 @@ function ActivityHeatmap({ sessions, loading }) {
                 <span key={text+wi} style={{
                   position:'absolute',
                   left: DAY_LABEL_W + wi * STRIDE,
-                  fontFamily:FONT, fontSize:8, lineHeight:'14px',
+                  fontFamily:FONT, fontSize:10, lineHeight:'14px',
                   color:'rgba(0,204,53,0.3)', textTransform:'uppercase', letterSpacing:'0.06em',
                   whiteSpace:'nowrap',
                 }}>{text}</span>
@@ -336,7 +336,7 @@ function ActivityHeatmap({ sessions, loading }) {
               {/* Mon Wed Fri labels */}
               <div style={{ display:'flex', flexDirection:'column', gap:GAP, width: DAY_LABEL_W, flexShrink:0 }}>
                 {['M','','W','','F','',''].map((d,i) => (
-                  <div key={i} style={{ height:CELL, display:'flex', alignItems:'center', justifyContent:'flex-end', paddingRight:4, fontFamily:FONT, fontSize:7, color:'rgba(0,204,53,0.28)', letterSpacing:'0.04em' }}>
+                  <div key={i} style={{ height:CELL, display:'flex', alignItems:'center', justifyContent:'flex-end', paddingRight:4, fontFamily:FONT, fontSize:9, color:'rgba(0,204,53,0.28)', letterSpacing:'0.04em' }}>
                     {d}
                   </div>
                 ))}
@@ -379,11 +379,11 @@ function ActivityHeatmap({ sessions, loading }) {
 
             {/* legend */}
             <div style={{ display:'flex', alignItems:'center', gap:3, marginTop:6, justifyContent:'flex-end' }}>
-              <span style={{ fontFamily:FONT, fontSize:7, color:'rgba(0,204,53,0.26)', marginRight:3 }}>less</span>
+              <span style={{ fontFamily:FONT, fontSize:9, color:'rgba(0,204,53,0.26)', marginRight:3 }}>less</span>
               {[0,1,2,4,7].map(n => (
                 <div key={n} style={{ width:CELL, height:CELL, borderRadius:2, background:cellBg(n), boxShadow:cellGlow(n) }} />
               ))}
-              <span style={{ fontFamily:FONT, fontSize:7, color:'rgba(0,204,53,0.26)', marginLeft:3 }}>more</span>
+              <span style={{ fontFamily:FONT, fontSize:9, color:'rgba(0,204,53,0.26)', marginLeft:3 }}>more</span>
             </div>
           </div>
         </div>
@@ -395,7 +395,7 @@ function ActivityHeatmap({ sessions, loading }) {
           position:'fixed', top:tooltip.y-38, left:tooltip.x, transform:'translateX(-50%)',
           background:'rgba(0,10,0,0.97)', border:'1px solid rgba(0,100,0,0.4)',
           borderRadius:5, padding:'5px 10px', pointerEvents:'none', zIndex:9999,
-          fontFamily:FONT, fontSize:10, color:'#00FF41', whiteSpace:'nowrap',
+          fontFamily:FONT, fontSize:12, color:'#00FF41', whiteSpace:'nowrap',
           boxShadow:'0 0 14px rgba(0,255,65,0.25)',
         }}>{tooltip.text}</div>
       )}
@@ -414,7 +414,7 @@ function HistoryTable({ sessions, loading }) {
     </div>
   )
   if (!sessions.length) return (
-    <div style={{ fontFamily:FONT, fontSize:11, color:'rgba(0,204,53,0.25)', padding:'16px 0' }}>no sessions yet</div>
+    <div style={{ fontFamily:FONT, fontSize:13, color:'rgba(0,204,53,0.25)', padding:'16px 0' }}>no sessions yet</div>
   )
 
   return (
@@ -422,7 +422,7 @@ function HistoryTable({ sessions, loading }) {
       {/* header */}
       <div style={{
         display:'grid', gridTemplateColumns:'56px 54px 54px 1fr 54px 80px',
-        fontFamily:FONT, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase',
+        fontFamily:FONT, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase',
         color:'rgba(0,204,53,0.2)', paddingBottom:8, borderBottom:'1px solid rgba(0,60,0,0.2)',
       }}>
         <span>wpm</span><span>raw</span><span>acc</span><span>language</span><span>dur</span><span style={{textAlign:'right'}}>date</span>
@@ -430,7 +430,7 @@ function HistoryTable({ sessions, loading }) {
       {visible.map((s, i) => (
         <div key={s._id ?? i} style={{
           display:'grid', gridTemplateColumns:'56px 54px 54px 1fr 54px 80px',
-          padding:'9px 0', fontFamily:FONT, fontSize:12, alignItems:'center',
+          padding:'9px 0', fontFamily:FONT, fontSize:13, alignItems:'center',
           borderBottom: i < visible.length-1 ? '1px solid rgba(0,45,0,0.18)' : 'none',
         }}>
           <span style={{ color:'#00FF41', fontWeight:700 }}>{s.wpm}</span>
@@ -438,7 +438,7 @@ function HistoryTable({ sessions, loading }) {
           <span style={{ color:'rgba(0,204,53,0.55)' }}>{s.accuracy}%</span>
           <span style={{ color:'rgba(0,204,53,0.4)' }}>{s.language}</span>
           <span style={{ color:'rgba(0,204,53,0.35)' }}>{s.duration}s</span>
-          <span style={{ color:'rgba(0,204,53,0.22)', fontSize:9, textAlign:'right' }}>
+          <span style={{ color:'rgba(0,204,53,0.22)', fontSize:11, textAlign:'right' }}>
             {new Date(s.createdAt).toLocaleDateString('en-US',{ month:'short', day:'numeric' })}&nbsp;
             {new Date(s.createdAt).toLocaleTimeString('en-US',{ hour:'2-digit', minute:'2-digit' })}
           </span>
@@ -447,7 +447,7 @@ function HistoryTable({ sessions, loading }) {
       {shown < sessions.length && (
         <button onClick={() => setShown(v => v + 10)} style={{
           display:'block', width:'100%', marginTop:12, padding:'9px 0',
-          fontFamily:FONT, fontSize:10, letterSpacing:'0.14em', cursor:'pointer',
+          fontFamily:FONT, fontSize:12, letterSpacing:'0.14em', cursor:'pointer',
           border:'1px solid rgba(0,80,0,0.25)', borderRadius:7,
           background:'rgba(0,5,0,0.4)', color:'rgba(0,204,53,0.4)',
           transition:'all 0.15s',
@@ -516,11 +516,11 @@ export default function Profile() {
     background:'rgba(0,5,0,0.5)', padding:'20px 22px', marginBottom:14,
   }
   const SL = {  // section label
-    fontFamily:FONT, fontSize:9, letterSpacing:'0.2em', textTransform:'uppercase',
+    fontFamily:FONT, fontSize:11, letterSpacing:'0.2em', textTransform:'uppercase',
     color:'rgba(0,204,53,0.28)', marginBottom:14,
   }
   const pill = (on) => ({
-    fontFamily:FONT, fontSize:10, letterSpacing:'0.1em',
+    fontFamily:FONT, fontSize:12, letterSpacing:'0.1em',
     padding:'6px 14px', cursor:'pointer', borderRadius:6,
     border: on ? '1px solid rgba(0,255,65,0.45)' : '1px solid rgba(0,80,0,0.28)',
     background: on ? 'rgba(0,255,65,0.07)' : 'transparent',
@@ -546,23 +546,23 @@ export default function Profile() {
           <div style={{ display:'flex', alignItems:'center', gap:18, marginBottom:18 }}>
             <AvatarCircle name={displayName} color={color} size={64} />
             <div style={{ flex:1 }}>
-              <div style={{ fontFamily:FONT, fontSize:16, fontWeight:700, color:'#00FF41', lineHeight:1, marginBottom:5 }}>
+              <div style={{ fontFamily:FONT, fontSize:18, fontWeight:700, color:'#00FF41', lineHeight:1, marginBottom:5 }}>
                 {displayName}
               </div>
               {user && (
-                <div style={{ fontFamily:FONT, fontSize:10, color:'rgba(0,204,53,0.3)', letterSpacing:'0.07em', marginBottom:2 }}>
+                <div style={{ fontFamily:FONT, fontSize:12, color:'rgba(0,204,53,0.3)', letterSpacing:'0.07em', marginBottom:2 }}>
                   {user.email}
                 </div>
               )}
               {user?.metadata?.creationTime && (
-                <div style={{ fontFamily:FONT, fontSize:8, color:'rgba(0,204,53,0.2)', letterSpacing:'0.06em' }}>
+                <div style={{ fontFamily:FONT, fontSize:10, color:'rgba(0,204,53,0.2)', letterSpacing:'0.06em' }}>
                   joined {new Date(user.metadata.creationTime).toLocaleDateString('en-US',{ month:'long', day:'numeric', year:'numeric' })}
                 </div>
               )}
             </div>
             {user && (
               <button onClick={handleLogout} disabled={logoutLoading} style={{
-                fontFamily:FONT, fontSize:9, letterSpacing:'0.12em', padding:'7px 14px',
+                fontFamily:FONT, fontSize:11, letterSpacing:'0.12em', padding:'7px 14px',
                 cursor:'pointer', borderRadius:6,
                 border:'1px solid rgba(255,68,68,0.28)', background:'transparent',
                 color:'rgba(255,88,88,0.65)', opacity:logoutLoading?0.4:1, transition:'all 0.14s', flexShrink:0,
@@ -619,7 +619,7 @@ export default function Profile() {
               { label:'languages used', value: byLang.length || '—' },
             ]} />
           ) : (
-            <div style={{ fontFamily:FONT, fontSize:11, color:'rgba(0,204,53,0.24)', textAlign:'center', padding:'20px 0' }}>
+            <div style={{ fontFamily:FONT, fontSize:13, color:'rgba(0,204,53,0.24)', textAlign:'center', padding:'20px 0' }}>
               no sessions yet — finish a test first
             </div>
           )}
@@ -631,7 +631,7 @@ export default function Profile() {
             <div style={SL}>by language</div>
             <div style={{
               display:'grid', gridTemplateColumns:'110px 1fr 60px 60px 52px',
-              fontFamily:FONT, fontSize:8, letterSpacing:'0.13em', textTransform:'uppercase',
+              fontFamily:FONT, fontSize:10, letterSpacing:'0.13em', textTransform:'uppercase',
               color:'rgba(0,204,53,0.2)', paddingBottom:8, borderBottom:'1px solid rgba(0,55,0,0.2)',
               gap:12,
             }}>
@@ -663,15 +663,15 @@ export default function Profile() {
               <AnimatePresence mode="wait">
                 {!editing ? (
                   <motion.div key="view" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.13}}>
-                    <div style={{ fontFamily:FONT, fontSize:17, fontWeight:700, color:'#00FF41', textShadow:'0 0 12px rgba(0,255,65,0.4)', marginBottom:4 }}>
+                    <div style={{ fontFamily:FONT, fontSize:19, fontWeight:700, color:'#00FF41', textShadow:'0 0 12px rgba(0,255,65,0.4)', marginBottom:4 }}>
                       {name || <span style={{opacity:0.28, fontWeight:400, fontSize:14}}>anonymous</span>}
                     </div>
-                    <div style={{ fontFamily:FONT, fontSize:8, color:'rgba(0,204,53,0.25)', letterSpacing:'0.1em', marginBottom:12 }}>
+                    <div style={{ fontFamily:FONT, fontSize:10, color:'rgba(0,204,53,0.25)', letterSpacing:'0.1em', marginBottom:12 }}>
                       {name ? 'display name' : 'no name set'}
                     </div>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                       <button onClick={startEdit} style={{
-                        fontFamily:FONT, fontSize:10, letterSpacing:'0.14em',
+                        fontFamily:FONT, fontSize:12, letterSpacing:'0.14em',
                         padding:'7px 16px', cursor:'pointer', borderRadius:6,
                         border:'1px solid rgba(0,255,65,0.22)', background:'transparent',
                         color:'rgba(0,255,65,0.6)', transition:'all 0.14s',
@@ -679,7 +679,7 @@ export default function Profile() {
                         {name ? 'edit profile' : 'set up profile'}
                       </button>
                       {saved && (
-                        <span style={{ fontFamily:FONT, fontSize:10, color:'#00FF41', textShadow:'0 0 8px rgba(0,255,65,0.4)', opacity:0.8 }}>
+                        <span style={{ fontFamily:FONT, fontSize:12, color:'#00FF41', textShadow:'0 0 8px rgba(0,255,65,0.4)', opacity:0.8 }}>
                           saved ✓
                         </span>
                       )}
@@ -688,21 +688,21 @@ export default function Profile() {
                 ) : (
                   <motion.div key="edit" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.13}}>
                     <div style={{ marginBottom:16 }}>
-                      <div style={{ fontFamily:FONT, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.26)', marginBottom:8 }}>display name</div>
+                      <div style={{ fontFamily:FONT, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.26)', marginBottom:8 }}>display name</div>
                       <input autoFocus value={editName}
                         onChange={e=>setEditName(e.target.value)}
                         onKeyDown={e=>{ if(e.key==='Enter') saveProfile(); if(e.key==='Escape') setEditing(false) }}
                         maxLength={24} placeholder="your name..."
                         style={{ width:'100%', background:'transparent', outline:'none', border:'none',
                           borderBottom:'1px solid rgba(0,255,65,0.32)', color:'#00FF41',
-                          fontFamily:FONT, fontSize:16, padding:'4px 2px', caretColor:'#00FF41' }}
+                          fontFamily:FONT, fontSize:18, padding:'4px 2px', caretColor:'#00FF41' }}
                       />
-                      <div style={{ fontFamily:FONT, fontSize:8, color:'rgba(0,204,53,0.2)', marginTop:5, letterSpacing:'0.08em' }}>
+                      <div style={{ fontFamily:FONT, fontSize:10, color:'rgba(0,204,53,0.2)', marginTop:5, letterSpacing:'0.08em' }}>
                         enter to save · esc to cancel
                       </div>
                     </div>
                     <div style={{ marginBottom:16 }}>
-                      <div style={{ fontFamily:FONT, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.26)', marginBottom:9 }}>avatar colour</div>
+                      <div style={{ fontFamily:FONT, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.26)', marginBottom:9 }}>avatar colour</div>
                       <div style={{ display:'flex', gap:9, flexWrap:'wrap' }}>
                         {AVATAR_COLORS.map(c => (
                           <button key={c} onClick={()=>pickColor(c)} style={{
@@ -715,12 +715,12 @@ export default function Profile() {
                     </div>
                     <div style={{ display:'flex', gap:9 }}>
                       <button onClick={saveProfile} style={{
-                        fontFamily:FONT, fontSize:10, letterSpacing:'0.14em', fontWeight:700,
+                        fontFamily:FONT, fontSize:12, letterSpacing:'0.14em', fontWeight:700,
                         padding:'8px 20px', cursor:'pointer', borderRadius:6, border:'none',
                         background:'#00FF41', color:'#000', boxShadow:'0 0 14px rgba(0,255,65,0.45)', transition:'all 0.14s',
                       }}>save</button>
                       <button onClick={()=>setEditing(false)} style={{
-                        fontFamily:FONT, fontSize:10, letterSpacing:'0.14em',
+                        fontFamily:FONT, fontSize:12, letterSpacing:'0.14em',
                         padding:'8px 16px', cursor:'pointer', borderRadius:6,
                         border:'1px solid rgba(0,255,65,0.16)', background:'transparent',
                         color:'rgba(0,255,65,0.38)', transition:'all 0.14s',
@@ -739,18 +739,18 @@ export default function Profile() {
           {user ? (
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:10 }}>
               <div>
-                <div style={{ fontFamily:FONT, fontSize:13, color:'#00FF41', marginBottom:3 }}>{user.displayName || 'no display name'}</div>
-                <div style={{ fontFamily:FONT, fontSize:10, color:'rgba(0,204,53,0.3)', letterSpacing:'0.06em' }}>{user.email}</div>
+                <div style={{ fontFamily:FONT, fontSize:15, color:'#00FF41', marginBottom:3 }}>{user.displayName || 'no display name'}</div>
+                <div style={{ fontFamily:FONT, fontSize:12, color:'rgba(0,204,53,0.3)', letterSpacing:'0.06em' }}>{user.email}</div>
               </div>
-              <Link to="/my-stats" style={{ fontFamily:FONT, fontSize:10, letterSpacing:'0.12em', color:'rgba(0,204,53,0.38)', textDecoration:'none' }}>
+              <Link to="/my-stats" style={{ fontFamily:FONT, fontSize:12, letterSpacing:'0.12em', color:'rgba(0,204,53,0.38)', textDecoration:'none' }}>
                 my stats →
               </Link>
             </div>
           ) : (
             <div style={{ display:'flex', alignItems:'center', gap:18 }}>
-              <span style={{ fontFamily:FONT, fontSize:11, color:'rgba(0,204,53,0.25)' }}>not logged in</span>
-              <Link to="/login" style={{ fontFamily:FONT, fontSize:11, color:'#00FF41', textDecoration:'none', textShadow:'0 0 8px rgba(0,255,65,0.4)' }}>&gt; login</Link>
-              <Link to="/signup" style={{ fontFamily:FONT, fontSize:11, color:'rgba(0,204,53,0.38)', textDecoration:'none' }}>&gt; create account</Link>
+              <span style={{ fontFamily:FONT, fontSize:13, color:'rgba(0,204,53,0.25)' }}>not logged in</span>
+              <Link to="/login" style={{ fontFamily:FONT, fontSize:13, color:'#00FF41', textDecoration:'none', textShadow:'0 0 8px rgba(0,255,65,0.4)' }}>&gt; login</Link>
+              <Link to="/signup" style={{ fontFamily:FONT, fontSize:13, color:'rgba(0,204,53,0.38)', textDecoration:'none' }}>&gt; create account</Link>
             </div>
           )}
         </div>
@@ -760,7 +760,7 @@ export default function Profile() {
           <div style={SL}>default settings</div>
           <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
             <div>
-              <div style={{ fontFamily:FONT, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.26)', marginBottom:9 }}>language</div>
+              <div style={{ fontFamily:FONT, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.26)', marginBottom:9 }}>language</div>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                 {LANGUAGES.map(l => (
                   <button key={l} onClick={()=>{setLanguage(l);localStorage.setItem('pref_lang',l)}} style={pill(language===l)}>{l}</button>
@@ -768,7 +768,7 @@ export default function Profile() {
               </div>
             </div>
             <div>
-              <div style={{ fontFamily:FONT, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.26)', marginBottom:9 }}>duration</div>
+              <div style={{ fontFamily:FONT, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(0,204,53,0.26)', marginBottom:9 }}>duration</div>
               <div style={{ display:'flex', gap:6 }}>
                 {DURATIONS.map(d => (
                   <button key={d} onClick={()=>{setDuration(d);localStorage.setItem('pref_dur',String(d))}} style={pill(duration===d)}>{d}s</button>

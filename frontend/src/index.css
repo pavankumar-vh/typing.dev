@@ -35,8 +35,8 @@ button, a, input, textarea, select, label, [role="button"] {
 /* ─── Base ───────────────────────────────────────────────── */
 body {
   font-family: "JetBrains Mono", monospace;
-  font-size: 17px;
-  line-height: 1.65;
+  font-size: 18px;
+  line-height: 1.7;
   letter-spacing: 0.3px;
   background-color: #000A00;
   color: #00FF41;

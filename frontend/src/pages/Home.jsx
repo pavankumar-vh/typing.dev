@@ -15,6 +15,105 @@ const MAX_ERRORS_AHEAD = 8   // monkeytype-style error cap
 const LINE_H = 40            // px — must match lineHeight style on text div
 const VISIBLE_LINES = 3
 
+// ─── WPM chart (SVG, smooth catmull-rom) ─────────────────
+function WpmChart({ wpmData, rawData }) {
+  if (!wpmData.length) return null
+
+  const W = 500, H = 160
+  const PAD = { top: 18, bottom: 28, left: 36, right: 14 }
+  const iW = W - PAD.left - PAD.right
+  const iH = H - PAD.top - PAD.bottom
+
+  const all  = [...wpmData, ...rawData]
+  const maxV = Math.max(...all, 10)
+  const n    = wpmData.length
+
+  const xOf = (i) => PAD.left + (n <= 1 ? iW / 2 : (i / (n - 1)) * iW)
+  const yOf = (v) => PAD.top + iH - (v / maxV) * iH
+
+  // catmull-rom → cubic bezier smooth path
+  const smooth = (data) => {
+    if (data.length < 2) return ''
+    const pts = data.map((v, i) => ({ x: xOf(i), y: yOf(v) }))
+    const p = (i) => pts[Math.max(0, Math.min(pts.length - 1, i))]
+    return pts.map((pt, i) => {
+      if (i === 0) return `M ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`
+      const p0 = p(i - 2), p1 = p(i - 1), p3 = p(i + 1)
+      const c1x = (p1.x + (pt.x - p0.x) / 6).toFixed(1)
+      const c1y = (p1.y + (pt.y - p0.y) / 6).toFixed(1)
+      const c2x = (pt.x - (p3.x - p1.x) / 6).toFixed(1)
+      const c2y = (pt.y - (p3.y - p1.y) / 6).toFixed(1)
+      return `C ${c1x} ${c1y}, ${c2x} ${c2y}, ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`
+    }).join(' ')
+  }
+
+  const wpmPath = smooth(wpmData)
+  const rawPath = smooth(rawData.length ? rawData : wpmData)
+
+  // y-axis ticks
+  const yTicks = [0, Math.round(maxV / 2), maxV]
+  // x-axis every ~2 seconds
+  const xStep  = Math.max(1, Math.floor(n / 6))
+  const xTicks = Array.from({ length: n }, (_, i) => i).filter(i => i % xStep === 0 || i === n - 1)
+
+  // close path for fill area
+  const last = wpmData.length - 1
+  const fillPath = `${wpmPath} L ${xOf(last).toFixed(1)} ${(PAD.top + iH).toFixed(1)} L ${PAD.left.toFixed(1)} ${(PAD.top + iH).toFixed(1)} Z`
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible', display: 'block' }}>
+      <defs>
+        <linearGradient id="wpmFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#00FF41" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="#00FF41" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      {/* grid lines */}
+      {yTicks.map(v => (
+        <line key={v}
+          x1={PAD.left} y1={yOf(v)} x2={W - PAD.right} y2={yOf(v)}
+          stroke="rgba(0,255,65,0.07)" strokeWidth="1" />
+      ))}
+
+      {/* y labels */}
+      {yTicks.map(v => (
+        <text key={v} x={PAD.left - 6} y={yOf(v) + 4}
+          fill="rgba(0,204,53,0.28)" fontSize="9" textAnchor="end"
+          fontFamily="JetBrains Mono, monospace">{v}</text>
+      ))}
+
+      {/* x labels */}
+      {xTicks.map(i => (
+        <text key={i} x={xOf(i)} y={H - 4}
+          fill="rgba(0,204,53,0.22)" fontSize="9" textAnchor="middle"
+          fontFamily="JetBrains Mono, monospace">{i + 1}</text>
+      ))}
+
+      {/* area fill */}
+      <path d={fillPath} fill="url(#wpmFill)" />
+
+      {/* raw WPM line */}
+      {rawData.length > 0 && (
+        <path d={rawPath} fill="none"
+          stroke="rgba(0,204,53,0.28)" strokeWidth="1.5"
+          strokeLinecap="round" strokeLinejoin="round" />
+      )}
+
+      {/* WPM line */}
+      <path d={wpmPath} fill="none"
+        stroke="rgba(0,255,65,0.8)" strokeWidth="2"
+        strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* dots at each data point */}
+      {wpmData.map((v, i) => (
+        <circle key={i} cx={xOf(i)} cy={yOf(v)} r="2.5"
+          fill="#00FF41" fillOpacity="0.7" />
+      ))}
+    </svg>
+  )
+}
+
 // ─── phase: 'idle' | 'active' | 'result' ─────────────────
 export default function Home() {
   const { language, setLanguage, duration, setDuration, difficulty, setDifficulty, codeFocus, setCodeFocus, snippetSize, setSnippetSize, punctuation, setPunctuation } = useConfig()
@@ -37,8 +136,10 @@ export default function Home() {
 
   const startTimeRef    = useRef(null)
   const timerRef        = useRef(null)
-  const wpmSamplesRef   = useRef([])         // WPM snapshot each second
+  const wpmSamplesRef    = useRef([])        // WPM snapshot each second
+  const rawWpmSamplesRef = useRef([])        // raw WPM snapshot each second
   const typedRef        = useRef([])         // mirrors typed state for callbacks
+  const [finalSamples, setFinalSamples] = useState({ wpm: [], raw: [] })
   const cursorRef       = useRef(null)       // char at cursor position (for line-scroll + caret)
   const caretRef        = useRef(null)       // absolutely-positioned smooth caret overlay
   const textInnerRef    = useRef(null)
@@ -48,6 +149,7 @@ export default function Home() {
   const resetState = useCallback((newSnippet, newDuration) => {
     typedRef.current = []
     wpmSamplesRef.current = []
+    rawWpmSamplesRef.current = []
     lastScrollLine.current = 0
     startTimeRef.current = null
     if (timerRef.current) clearInterval(timerRef.current)
@@ -141,6 +243,7 @@ export default function Home() {
     setWpm(finalWpm); setRawWpm(finalRaw)
     setAccuracy(finalAcc); setErrors(finalErr)
     setConsistency(cons)
+    setFinalSamples({ wpm: [...wpmSamplesRef.current], raw: [...rawWpmSamplesRef.current] })
     setPhase('result')
 
     fetch(`${API_BASE}/api/sessions`, {
@@ -168,6 +271,13 @@ export default function Home() {
   // ─── Keyboard handler ────────────────────────────────────
   const handleKeyDown = useCallback((e) => {
     setCapsLock(e.getModifierState('CapsLock'))
+
+    // Ctrl+Tab → always load a new snippet (works in all phases)
+    if (e.ctrlKey && e.key === 'Tab') {
+      e.preventDefault()
+      loadNewSnippet(language, duration, difficulty, codeFocus, snippetSize)
+      return
+    }
 
     if (e.key === 'Tab') {
       e.preventDefault()
@@ -272,8 +382,9 @@ export default function Home() {
       startTimeRef.current = Date.now()
       setPhase('active')
       timerRef.current = setInterval(() => {
-        // Sample WPM every second for consistency
+        const elapsed = Date.now() - startTimeRef.current
         wpmSamplesRef.current.push(rollingWPM(typedRef.current))
+        rawWpmSamplesRef.current.push(calculateWPM(typedRef.current.length, elapsed))
         setTimeRemaining((prev) => (prev <= 1 ? 0 : prev - 1))
       }, 1000)
     }
@@ -768,7 +879,9 @@ export default function Home() {
                   </span>
                 ) : (
                   <>
-                    <span className="opacity-40">tab → new</span>
+                    <span className="opacity-40">tab → indent</span>
+                    <span className="opacity-25">·</span>
+                    <span className="opacity-40">ctrl+tab → new</span>
                     <span className="opacity-25">·</span>
                     <span className="opacity-40">esc → restart</span>
                     <span className="opacity-25">·</span>
@@ -784,56 +897,57 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             >
-              <p className="text-muted text-sm tracking-widest mb-12 opacity-80">
+              {/* lang · duration badge */}
+              <p className="text-muted text-xs tracking-widest mb-8 opacity-60">
                 {language} · {duration}s
               </p>
 
-              {/* Primary stats */}
-              <div className="grid grid-cols-4 gap-10 mb-10">
-                <div>
-                  <p className="text-muted text-sm tracking-widest mb-3">wpm</p>
-                  <p className="text-7xl glow-text text-text tabular-nums">{wpm}</p>
-                </div>
-                <div>
-                  <p className="text-muted text-sm tracking-widest mb-3">acc</p>
-                  <p className="text-7xl glow-text text-text tabular-nums">{accuracy}%</p>
-                </div>
-                <div>
-                  <p className="text-muted text-sm tracking-widest mb-3">raw</p>
-                  <p className="text-6xl text-muted tabular-nums">{rawWpm}</p>
-                </div>
-                <div>
-                  <p className="text-muted text-sm tracking-widest mb-3">errors</p>
-                  <p className={`text-7xl tabular-nums ${errors > 0 ? 'glow-error text-error' : 'glow-text text-text'}`}>
-                    {errors}
+              {/* ── Main row: left stats + right chart ── */}
+              <div className="flex items-start gap-10 mb-0">
+
+                {/* Left: primary stats */}
+                <div style={{ minWidth: 140, flexShrink: 0 }}>
+                  <p className="text-muted text-xs tracking-widest mb-1 opacity-60">wpm</p>
+                  <p className="glow-text text-text tabular-nums leading-none mb-5"
+                    style={{ fontSize: '5rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
+                    {wpm}
                   </p>
+                  <p className="text-muted text-xs tracking-widest mb-1 opacity-60">acc</p>
+                  <p className="glow-text text-text tabular-nums leading-none"
+                    style={{ fontSize: '3.5rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
+                    {accuracy}%
+                  </p>
+                </div>
+
+                {/* Right: chart */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <WpmChart wpmData={finalSamples.wpm} rawData={finalSamples.raw} />
                 </div>
               </div>
 
-              {/* Secondary stats */}
+              {/* ── Secondary stats strip ── */}
               <div
-                className="flex gap-12 mb-12 pt-8 border-t"
-                style={{ borderColor: 'rgba(0,85,0,0.4)' }}
+                className="flex gap-10 mt-6 pt-6"
+                style={{ borderTop: '1px solid rgba(0,85,0,0.3)' }}
               >
-                <div>
-                  <p className="text-muted text-xs tracking-widest mb-2">consistency</p>
-                  <p className={`text-3xl tabular-nums ${
-                    consistency >= 80 ? 'text-text glow-text'
-                    : consistency >= 60 ? 'text-muted'
-                    : 'text-error'
-                  }`}>{consistency}%</p>
-                </div>
-                <div>
-                  <p className="text-muted text-xs tracking-widest mb-2">chars</p>
-                  <p className="text-3xl text-muted tabular-nums">
-                    {correctTyped}
-                    <span className="text-xl opacity-40">/{typed.length}</span>
-                  </p>
-                </div>
+                {[
+                  { label: 'raw',         value: rawWpm },
+                  { label: 'characters', value: `${correctTyped}/${typed.length - correctTyped}/0/0` },
+                  { label: 'consistency', value: `${consistency}%` },
+                  { label: 'time',        value: `${duration}s` },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-muted text-xs tracking-widest mb-1 opacity-50">{label}</p>
+                    <p className="text-muted tabular-nums" style={{ fontSize: '1.6rem', fontFamily: 'JetBrains Mono, monospace' }}>
+                      {value}
+                    </p>
+                  </div>
+                ))}
               </div>
 
-              <div className="flex gap-8 text-sm text-muted select-none">
-                <span className="opacity-30">tab</span>
+              {/* ── Shortcuts + links ── */}
+              <div className="flex gap-8 text-sm text-muted select-none mt-10">
+                <span className="opacity-30">tab / ctrl+tab</span>
                 <span className="opacity-20">→ new test</span>
                 <span className="opacity-20 mx-4">·</span>
                 <Link to="/leaderboard" className="opacity-40 hover:opacity-100 hover:text-text transition-all">
