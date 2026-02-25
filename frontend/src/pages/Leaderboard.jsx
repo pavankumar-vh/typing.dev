@@ -114,7 +114,7 @@ function PodiumCard({ row, rank, maxWpm, isMe }) {
         border: `1px solid ${color}2A`,
         boxShadow: `0 0 28px ${color}10, inset 0 0 28px ${color}05`,
         position: 'relative',
-        marginBottom: rank === 1 ? 0 : rank === 2 ? 16 : 32,
+        marginBottom: rank === 1 ? 32 : rank === 2 ? 16 : 0,
       }}
     >
       {/* Medal */}
