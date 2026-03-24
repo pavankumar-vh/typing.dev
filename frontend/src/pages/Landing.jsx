@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useInView, useScroll, useTransform } from 'framer-motion'
+import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from 'framer-motion'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Points, PointMaterial, Float, MeshDistortMaterial, Sphere } from '@react-three/drei'
+import * as THREE from 'three'
 
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS
@@ -70,16 +73,204 @@ const STEPS = [
   { num: '03', title: 'Track & Compete', desc: 'Review your stats, watch your progress, climb the leaderboard.' },
 ]
 
+const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*<>[]{}/'
+
+const TESTIMONIALS = [
+  { name: 'Alex K.', role: 'Full-Stack Dev', text: 'Went from 45 to 78 WPM in 3 weeks. The AI snippets keep it fresh.', wpm: 78 },
+  { name: 'Sarah M.', role: 'DevOps Engineer', text: 'Finally a typing trainer that uses real code, not "the quick brown fox".', wpm: 92 },
+  { name: 'James L.', role: 'CS Student', text: 'The leaderboard keeps me coming back. Addictive in the best way.', wpm: 65 },
+]
+
 /* ═══════════════════════════════════════════════════════════
-   SUB-COMPONENTS
+   THREE.JS COMPONENTS
    ═══════════════════════════════════════════════════════════ */
 
-/* ── Animated counter ─────────────────────────────────────── */
+function StarField({ count = 3000 }) {
+  const points = useRef()
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 20
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 20
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 20
+    }
+    return pos
+  }, [count])
+
+  useFrame((state, delta) => {
+    if (points.current) {
+      points.current.rotation.x -= delta * 0.02
+      points.current.rotation.y -= delta * 0.03
+    }
+  })
+
+  return (
+    <group rotation={[0, 0, Math.PI / 4]}>
+      <Points ref={points} positions={positions} stride={3} frustumCulled={false}>
+        <PointMaterial transparent color="#00FF41" size={0.015} sizeAttenuation depthWrite={false} opacity={0.6} />
+      </Points>
+    </group>
+  )
+}
+
+function MorphOrb() {
+  const meshRef = useRef()
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x = state.clock.elapsedTime * 0.15
+      meshRef.current.rotation.y = state.clock.elapsedTime * 0.2
+    }
+  })
+  return (
+    <Float speed={1.5} rotationIntensity={0.3} floatIntensity={0.8}>
+      <Sphere ref={meshRef} args={[1.5, 64, 64]} position={[0, 0, 0]}>
+        <MeshDistortMaterial
+          color="#003300" emissive="#00FF41" emissiveIntensity={0.15}
+          roughness={0.3} metalness={0.8} distort={0.4} speed={2}
+          transparent opacity={0.35} wireframe
+        />
+      </Sphere>
+    </Float>
+  )
+}
+
+function GridFloor() {
+  const meshRef = useRef()
+  useFrame((state) => {
+    if (meshRef.current) meshRef.current.position.z = (state.clock.elapsedTime * 0.3) % 1
+  })
+  return <gridHelper ref={meshRef} args={[40, 40, '#003300', '#001a00']} position={[0, -4, 0]} />
+}
+
+function CameraRig() {
+  const { camera } = useThree()
+  const mouseX = useRef(0)
+  const mouseY = useRef(0)
+  useEffect(() => {
+    const handle = (e) => {
+      mouseX.current = (e.clientX / window.innerWidth - 0.5) * 2
+      mouseY.current = (e.clientY / window.innerHeight - 0.5) * 2
+    }
+    window.addEventListener('mousemove', handle)
+    return () => window.removeEventListener('mousemove', handle)
+  }, [])
+  useFrame(() => {
+    camera.position.x += (mouseX.current * 0.5 - camera.position.x) * 0.02
+    camera.position.y += (-mouseY.current * 0.3 - camera.position.y) * 0.02
+    camera.lookAt(0, 0, 0)
+  })
+  return null
+}
+
+function Scene3D() {
+  return (
+    <div className="landing-3d-bg">
+      <Canvas camera={{ position: [0, 0, 5], fov: 60 }} dpr={[1, 1.5]} gl={{ antialias: false, alpha: true }} style={{ background: 'transparent' }}>
+        <fog attach="fog" args={['#000A00', 5, 25]} />
+        <ambientLight intensity={0.2} />
+        <pointLight position={[10, 10, 10]} color="#00FF41" intensity={0.5} />
+        <StarField />
+        <MorphOrb />
+        <GridFloor />
+        <CameraRig />
+      </Canvas>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VISUAL EFFECTS COMPONENTS
+   ═══════════════════════════════════════════════════════════ */
+
+function ScrambleText({ text, className, delay = 0 }) {
+  const [displayed, setDisplayed] = useState('')
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-40px' })
+  const hasRun = useRef(false)
+
+  useEffect(() => {
+    if (!inView || hasRun.current) return
+    hasRun.current = true
+    let iteration = 0
+    const maxIterations = text.length
+    const timeout = setTimeout(() => {
+      const interval = setInterval(() => {
+        setDisplayed(
+          text.split('').map((char, i) => {
+            if (char === ' ') return ' '
+            if (i < iteration) return text[i]
+            return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]
+          }).join('')
+        )
+        iteration += 1 / 2
+        if (iteration >= maxIterations) { setDisplayed(text); clearInterval(interval) }
+      }, 30)
+      return () => clearInterval(interval)
+    }, delay)
+    return () => clearTimeout(timeout)
+  }, [inView, text, delay])
+
+  return <span ref={ref} className={className}>{displayed || '\u00A0'}</span>
+}
+
+function GlitchText({ children, className }) {
+  return (
+    <span className={`landing-glitch ${className || ''}`} data-text={children}>
+      {children}
+    </span>
+  )
+}
+
+function MagneticButton({ children, className, ...props }) {
+  const ref = useRef(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const springX = useSpring(x, { stiffness: 150, damping: 15 })
+  const springY = useSpring(y, { stiffness: 150, damping: 15 })
+
+  const handleMouse = (e) => {
+    const rect = ref.current?.getBoundingClientRect()
+    if (!rect) return
+    x.set((e.clientX - (rect.left + rect.width / 2)) * 0.3)
+    y.set((e.clientY - (rect.top + rect.height / 2)) * 0.3)
+  }
+  const reset = () => { x.set(0); y.set(0) }
+
+  return (
+    <motion.div ref={ref} style={{ x: springX, y: springY, display: 'inline-block' }} onMouseMove={handleMouse} onMouseLeave={reset}>
+      <Link className={className} {...props}>{children}</Link>
+    </motion.div>
+  )
+}
+
+function TiltCard({ children, className }) {
+  const ref = useRef(null)
+  const rotateX = useMotionValue(0)
+  const rotateY = useMotionValue(0)
+  const springRX = useSpring(rotateX, { stiffness: 200, damping: 20 })
+  const springRY = useSpring(rotateY, { stiffness: 200, damping: 20 })
+
+  const handleMouse = (e) => {
+    const rect = ref.current?.getBoundingClientRect()
+    if (!rect) return
+    rotateX.set(((e.clientY - rect.top) / rect.height - 0.5) * -15)
+    rotateY.set(((e.clientX - rect.left) / rect.width - 0.5) * 15)
+  }
+  const reset = () => { rotateX.set(0); rotateY.set(0) }
+
+  return (
+    <motion.div
+      ref={ref} className={className}
+      style={{ rotateX: springRX, rotateY: springRY, transformPerspective: 800, transformStyle: 'preserve-3d' }}
+      onMouseMove={handleMouse} onMouseLeave={reset}
+    >{children}</motion.div>
+  )
+}
+
 function Counter({ target, suffix = '', duration = 2 }) {
   const [count, setCount] = useState(0)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
-
   useEffect(() => {
     if (!inView) return
     let start = 0
@@ -91,90 +282,19 @@ function Counter({ target, suffix = '', duration = 2 }) {
     }, 1000 / 60)
     return () => clearInterval(id)
   }, [inView, target, duration])
-
-  return (
-    <span ref={ref}>
-      {count.toLocaleString()}{suffix}
-    </span>
-  )
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
 }
 
-/* ── Floating particle field ──────────────────────────────── */
-function ParticleField() {
-  const canvasRef = useRef(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    let raf
-    let w = canvas.width = window.innerWidth
-    let h = canvas.height = window.innerHeight
-
-    const particles = Array.from({ length: 60 }, () => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      r: Math.random() * 1.5 + 0.5,
-      a: Math.random() * 0.4 + 0.1,
-    }))
-
-    const onResize = () => {
-      w = canvas.width = window.innerWidth
-      h = canvas.height = window.innerHeight
-    }
-    window.addEventListener('resize', onResize)
-
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h)
-
-      for (const p of particles) {
-        p.x += p.vx; p.y += p.vy
-        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0
-        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0
-
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(0,255,65,${p.a})`
-        ctx.fill()
-      }
-
-      // draw connections
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x
-          const dy = particles[i].y - particles[j].y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 150) {
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.strokeStyle = `rgba(0,255,65,${0.06 * (1 - dist / 150)})`
-            ctx.lineWidth = 0.5
-            ctx.stroke()
-          }
-        }
-      }
-      raf = requestAnimationFrame(draw)
-    }
-    draw()
-
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('resize', onResize)
-    }
-  }, [])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none"
-      style={{ zIndex: 0, opacity: 0.5 }}
-    />
-  )
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll()
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 })
+  return <motion.div className="landing-scroll-progress" style={{ scaleX }} />
 }
 
-/* ── Live typing simulation ───────────────────────────────── */
+function NoiseOverlay() {
+  return <div className="landing-noise" aria-hidden="true" />
+}
+
 function TypingDemo() {
   const [typed, setTyped] = useState(0)
   const [wpm, setWpm] = useState(0)
@@ -190,18 +310,14 @@ function TypingDemo() {
     const type = () => {
       i++
       setTyped(i)
-      // simulate WPM ramp up
       setWpm(Math.min(85, Math.floor(30 + (i / DEMO_CODE.length) * 55 + Math.random() * 6)))
       setAcc(Math.max(96, 100 - Math.floor(Math.random() * 4)))
-
       if (i >= DEMO_CODE.length) {
         clearTimeout(intervalRef.current)
-        // restart after a pause
         setTimeout(() => { i = 0; setTyped(0); setWpm(0); setAcc(100); type() }, 2400)
         return
       }
       const jitter = (Math.random() - 0.5) * 40
-      // slow down for special chars
       const ch = DEMO_CODE[i]
       const extra = /[{}()[\]<>.,;:=!&|]/.test(ch) ? 50 : 0
       intervalRef.current = setTimeout(type, baseDelay + jitter + extra)
@@ -215,26 +331,25 @@ function TypingDemo() {
 
   return (
     <div ref={ref} className="landing-demo-window">
-      {/* title bar */}
       <div className="landing-demo-titlebar">
         <span className="landing-dot landing-dot--red" />
         <span className="landing-dot landing-dot--yellow" />
         <span className="landing-dot landing-dot--green" />
         <span className="landing-demo-filename">quickSort.js</span>
+        <div className="landing-demo-pulse" />
       </div>
-
-      {/* metrics bar */}
       <div className="landing-demo-metrics">
         <span><span className="landing-metric-label">WPM</span> <span className="landing-metric-value">{wpm}</span></span>
         <span><span className="landing-metric-label">ACC</span> <span className="landing-metric-value">{acc}%</span></span>
         <span><span className="landing-metric-label">TIME</span> <span className="landing-metric-value">0:{String(Math.floor(typed / 3)).padStart(2, '0')}</span></span>
+        <div className="landing-demo-wpm-bar">
+          <motion.div className="landing-demo-wpm-fill" animate={{ width: `${Math.min(100, (wpm / 100) * 100)}%` }} transition={{ duration: 0.3 }} />
+        </div>
       </div>
-
-      {/* code area */}
       <div className="landing-demo-code">
         {lines.map((line, li) => {
           const lineStart = charIndex
-          charIndex += line.length + (li < lines.length - 1 ? 1 : 0) // +1 for \n
+          charIndex += line.length + (li < lines.length - 1 ? 1 : 0)
           return (
             <div key={li} className="landing-demo-line">
               <span className="landing-demo-lineno">{li + 1}</span>
@@ -255,23 +370,96 @@ function TypingDemo() {
   )
 }
 
-/* ── Glowing feature card ─────────────────────────────────── */
 function FeatureCard({ icon, title, desc, index }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-30px' })
-
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.1, ease: 'easeOut' }}
-      className="landing-feature-card"
+      initial={{ opacity: 0, y: 40, rotateX: 10 }}
+      animate={inView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
+      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="landing-feature-icon">{icon}</div>
-      <h3 className="landing-feature-title">{title}</h3>
-      <p className="landing-feature-desc">{desc}</p>
+      <TiltCard className="landing-feature-card">
+        <div className="landing-feature-card-glow" />
+        <div className="landing-feature-icon">{icon}</div>
+        <h3 className="landing-feature-title">{title}</h3>
+        <p className="landing-feature-desc">{desc}</p>
+        <div className="landing-feature-border-anim" />
+      </TiltCard>
     </motion.div>
+  )
+}
+
+function TestimonialCard({ name, role, text, wpm, index }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-30px' })
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.15, ease: [0.16, 1, 0.3, 1] }}
+      className="landing-testimonial-card"
+    >
+      <div className="landing-testimonial-quote">&ldquo;</div>
+      <p className="landing-testimonial-text">{text}</p>
+      <div className="landing-testimonial-footer">
+        <div>
+          <div className="landing-testimonial-name">{name}</div>
+          <div className="landing-testimonial-role">{role}</div>
+        </div>
+        <div className="landing-testimonial-wpm">{wpm} <span>WPM</span></div>
+      </div>
+    </motion.div>
+  )
+}
+
+function SectionHeading({ tag, title, sub }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-50px' })
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="landing-section-heading">
+      <span className="landing-section-tag">{tag}</span>
+      <h2 className="landing-section-title"><ScrambleText text={title} delay={200} /></h2>
+      {sub && <p className="landing-section-sub">{sub}</p>}
+    </motion.div>
+  )
+}
+
+function StepCard({ num, title, desc, index }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-40px' })
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, x: -40 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: index * 0.15, ease: [0.16, 1, 0.3, 1] }} className="landing-step-card">
+      <div className="landing-step-num">{num}</div>
+      <div className="landing-step-connector" />
+      <div>
+        <h3 className="landing-step-title">{title}</h3>
+        <p className="landing-step-desc">{desc}</p>
+      </div>
+    </motion.div>
+  )
+}
+
+function FloatingCode() {
+  const lines = [
+    'const speed = measure()', 'fn main() { loop {} }', 'import asyncio',
+    'System.out.print()', 'go func() {}()', 'impl Iterator for',
+    'export default App', 'while (true) { type }',
+  ]
+  return (
+    <div className="landing-floating-code" aria-hidden="true">
+      {lines.map((line, i) => (
+        <motion.div
+          key={i} className="landing-floating-line"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.12, 0.12, 0], x: [0, 20, 20, 40], y: [0, -10, -10, -20] }}
+          transition={{ duration: 8, delay: i * 1.2, repeat: Infinity, ease: 'linear' }}
+          style={{ top: `${10 + (i * 11) % 80}%`, left: `${5 + (i * 17) % 85}%`, fontSize: `${0.55 + Math.random() * 0.25}rem` }}
+        >{line}</motion.div>
+      ))}
+    </div>
   )
 }
 
@@ -281,24 +469,24 @@ function FeatureCard({ icon, title, desc, index }) {
 export default function Landing() {
   const heroRef = useRef(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 120])
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 150])
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.95])
 
   return (
     <div className="landing-root">
-      <ParticleField />
+      <ScrollProgress />
+      <NoiseOverlay />
+      <Scene3D />
+      <FloatingCode />
 
       {/* ═══════ HERO ═══════ */}
       <section ref={heroRef} className="landing-hero">
-        <motion.div
-          style={{ y: heroY, opacity: heroOpacity }}
-          className="landing-hero-inner"
-        >
-          {/* Tagline */}
+        <motion.div style={{ y: heroY, opacity: heroOpacity, scale: heroScale }} className="landing-hero-inner">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
+            initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="landing-hero-badge"
           >
             <span className="landing-badge-dot" />
@@ -306,56 +494,47 @@ export default function Landing() {
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.15, ease: 'easeOut' }}
+            initial={{ opacity: 0, y: 50, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 1, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="landing-hero-title"
           >
-            Type <span className="landing-gradient-text">real code.</span>
+            Type <GlitchText className="landing-gradient-text">real code.</GlitchText>
             <br />
-            Get <span className="landing-gradient-text">really fast.</span>
+            Get <GlitchText className="landing-gradient-text">really fast.</GlitchText>
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.35 }}
+            initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.8, delay: 0.35 }}
             className="landing-hero-sub"
           >
             Practice typing production-quality code in 7 languages with AI-generated
             snippets, real-time metrics, and a global leaderboard.
           </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.55 }}
-            className="landing-hero-ctas"
-          >
-            <Link to="/test" className="landing-btn-primary">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.55 }} className="landing-hero-ctas">
+            <MagneticButton to="/test" className="landing-btn-primary">
               <span className="landing-btn-glow" />
+              <span className="landing-btn-shimmer" />
               Start Typing
               <span className="landing-btn-arrow">→</span>
-            </Link>
-            <Link to="/leaderboard" className="landing-btn-secondary">
+            </MagneticButton>
+            <MagneticButton to="/leaderboard" className="landing-btn-secondary">
               View Leaderboard
-            </Link>
+            </MagneticButton>
           </motion.div>
 
-          {/* language pills */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.75 }}
-            className="landing-lang-pills"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.75 }} className="landing-lang-pills">
             {LANGUAGES.map((l, i) => (
               <motion.span
                 key={l.name}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.8 + i * 0.06 }}
+                initial={{ opacity: 0, scale: 0.8, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                transition={{ delay: 0.8 + i * 0.07, duration: 0.4 }}
                 className="landing-lang-pill"
+                whileHover={{ scale: 1.1, borderColor: 'rgba(0,255,65,0.5)' }}
               >
                 <span className="landing-lang-icon">{l.icon}</span>
                 {l.name}
@@ -363,86 +542,90 @@ export default function Landing() {
             ))}
           </motion.div>
         </motion.div>
+
+        <motion.div className="landing-scroll-hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>
+          <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}>
+            <span className="landing-scroll-arrow">↓</span>
+          </motion.div>
+          <span className="landing-scroll-label">scroll to explore</span>
+        </motion.div>
       </section>
 
       {/* ═══════ LIVE DEMO ═══════ */}
       <section className="landing-section">
-        <SectionHeading
-          tag="Live Preview"
-          title="Watch it in action"
-          sub="Character-by-character validation with real-time WPM tracking — just like the real thing."
-        />
+        <SectionHeading tag="Live Preview" title="Watch it in action" sub="Character-by-character validation with real-time WPM tracking — just like the real thing." />
         <div className="landing-demo-wrap">
-          <TypingDemo />
+          <motion.div
+            initial={{ opacity: 0, y: 40, rotateX: 8 }}
+            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            style={{ transformPerspective: 1200 }}
+          >
+            <TypingDemo />
+          </motion.div>
         </div>
       </section>
 
       {/* ═══════ FEATURES ═══════ */}
       <section className="landing-section">
-        <SectionHeading
-          tag="Features"
-          title="Everything you need to level up"
-          sub="Built with obsessive attention to what makes typing practice effective for developers."
-        />
+        <SectionHeading tag="Features" title="Everything you need to level up" sub="Built with obsessive attention to what makes typing practice effective for developers." />
         <div className="landing-features-grid">
-          {FEATURES.map((f, i) => (
-            <FeatureCard key={f.title} {...f} index={i} />
-          ))}
+          {FEATURES.map((f, i) => <FeatureCard key={f.title} {...f} index={i} />)}
         </div>
       </section>
 
       {/* ═══════ HOW IT WORKS ═══════ */}
       <section className="landing-section">
-        <SectionHeading
-          tag="How It Works"
-          title="Three steps to faster typing"
-          sub="No setup required. Jump in and start improving in under a minute."
-        />
+        <SectionHeading tag="How It Works" title="Three steps to faster typing" sub="No setup required. Jump in and start improving in under a minute." />
         <div className="landing-steps">
-          {STEPS.map((s, i) => (
-            <StepCard key={s.num} {...s} index={i} />
-          ))}
+          {STEPS.map((s, i) => <StepCard key={s.num} {...s} index={i} />)}
         </div>
       </section>
 
       {/* ═══════ STATS ═══════ */}
       <section className="landing-section">
         <div className="landing-stats-grid">
-          {STATS.map((s) => (
-            <div key={s.label} className="landing-stat-card">
-              <div className="landing-stat-value">
-                <Counter target={s.value} suffix={s.suffix} />
-              </div>
+          {STATS.map((s, i) => (
+            <motion.div
+              key={s.label} className="landing-stat-card"
+              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ scale: 1.05, borderColor: 'rgba(0,255,65,0.3)' }}
+            >
+              <div className="landing-stat-value"><Counter target={s.value} suffix={s.suffix} /></div>
               <div className="landing-stat-label">{s.label}</div>
-            </div>
+            </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* ═══════ TESTIMONIALS ═══════ */}
+      <section className="landing-section">
+        <SectionHeading tag="Community" title="Developers love typing.dev" sub="Join thousands of developers who have made typing.dev part of their daily routine." />
+        <div className="landing-testimonials-grid">
+          {TESTIMONIALS.map((t, i) => <TestimonialCard key={t.name} {...t} index={i} />)}
         </div>
       </section>
 
       {/* ═══════ FINAL CTA ═══════ */}
       <section className="landing-section landing-cta-section">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.7 }}
-          className="landing-cta-box"
-        >
-          <h2 className="landing-cta-title">
-            Ready to type like you mean it?
-          </h2>
-          <p className="landing-cta-sub">
-            Join thousands of developers sharpening their keystrokes on real code.
-          </p>
+        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.7 }} className="landing-cta-box">
+          <div className="landing-cta-orb" />
+          <h2 className="landing-cta-title"><ScrambleText text="Ready to type like you mean it?" delay={300} /></h2>
+          <p className="landing-cta-sub">Join thousands of developers sharpening their keystrokes on real code.</p>
           <div className="landing-hero-ctas" style={{ justifyContent: 'center' }}>
-            <Link to="/test" className="landing-btn-primary">
+            <MagneticButton to="/test" className="landing-btn-primary">
               <span className="landing-btn-glow" />
+              <span className="landing-btn-shimmer" />
               Start Typing — It&apos;s Free
               <span className="landing-btn-arrow">→</span>
-            </Link>
-            <Link to="/signup" className="landing-btn-secondary">
+            </MagneticButton>
+            <MagneticButton to="/signup" className="landing-btn-secondary">
               Create Account
-            </Link>
+            </MagneticButton>
           </div>
         </motion.div>
       </section>
@@ -457,47 +640,5 @@ export default function Landing() {
         </div>
       </footer>
     </div>
-  )
-}
-
-/* ── Section heading ──────────────────────────────────────── */
-function SectionHeading({ tag, title, sub }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-50px' })
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6 }}
-      className="landing-section-heading"
-    >
-      <span className="landing-section-tag">{tag}</span>
-      <h2 className="landing-section-title">{title}</h2>
-      {sub && <p className="landing-section-sub">{sub}</p>}
-    </motion.div>
-  )
-}
-
-/* ── Step card ────────────────────────────────────────────── */
-function StepCard({ num, title, desc, index }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-40px' })
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, x: -30 }}
-      animate={inView ? { opacity: 1, x: 0 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.15 }}
-      className="landing-step-card"
-    >
-      <div className="landing-step-num">{num}</div>
-      <div>
-        <h3 className="landing-step-title">{title}</h3>
-        <p className="landing-step-desc">{desc}</p>
-      </div>
-    </motion.div>
   )
 }

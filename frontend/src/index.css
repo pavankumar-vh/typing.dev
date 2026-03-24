@@ -195,8 +195,59 @@ button:hover {
 .lb-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,255,65,0.3); }
 
 /* ═══════════════════════════════════════════════════════════
-   LANDING PAGE
+   LANDING PAGE — ENHANCED
    ═══════════════════════════════════════════════════════════ */
+
+/* ── 3D Background Canvas ─────────────────────────────────── */
+.landing-3d-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* ── Noise / Film Grain Overlay ───────────────────────────── */
+.landing-noise {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+  mix-blend-mode: overlay;
+}
+
+/* ── Scroll Progress Bar ──────────────────────────────────── */
+.landing-scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #00FF41;
+  transform-origin: left;
+  z-index: 10000;
+  box-shadow: 0 0 10px #00FF41, 0 0 30px rgba(0,255,65,0.3);
+}
+
+/* ── Floating Code Snippets ───────────────────────────────── */
+.landing-floating-code {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.landing-floating-line {
+  position: absolute;
+  font-family: "JetBrains Mono", monospace;
+  color: rgba(0, 255, 65, 0.12);
+  white-space: nowrap;
+}
 
 .landing-root {
   position: relative;
@@ -212,6 +263,7 @@ button:hover {
   align-items: center;
   justify-content: center;
   padding: 6rem 2rem 4rem;
+  flex-direction: column;
 }
 
 .landing-hero-inner {
@@ -234,6 +286,7 @@ button:hover {
   background: rgba(0, 255, 65, 0.04);
   color: #00CC35;
   margin-bottom: 2rem;
+  backdrop-filter: blur(8px);
 }
 
 .landing-badge-dot {
@@ -241,7 +294,7 @@ button:hover {
   height: 6px;
   border-radius: 50%;
   background: #00FF41;
-  box-shadow: 0 0 8px #00FF41;
+  box-shadow: 0 0 8px #00FF41, 0 0 20px rgba(0,255,65,0.4);
   animation: cursorPulse 2s ease-in-out infinite;
 }
 
@@ -254,18 +307,65 @@ button:hover {
   margin-bottom: 1.5rem;
 }
 
+/* ── Glitch Text Effect ───────────────────────────────────── */
+.landing-glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.landing-glitch::before,
+.landing-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.landing-glitch::before {
+  animation: landing-glitch-1 3s infinite linear alternate-reverse;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  -webkit-text-fill-color: initial;
+  background: none;
+}
+
+.landing-glitch::after {
+  animation: landing-glitch-2 3s infinite linear alternate-reverse;
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  -webkit-text-fill-color: initial;
+  background: none;
+}
+
+@keyframes landing-glitch-1 {
+  0%, 90%  { transform: translateX(0); opacity: 1; }
+  92%      { transform: translateX(-3px) skewX(-1deg); opacity: 0.8; }
+  94%      { transform: translateX(3px); opacity: 1; }
+  96%      { transform: translateX(-2px) skewX(0.5deg); opacity: 0.9; }
+  98%, 100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes landing-glitch-2 {
+  0%, 88%  { transform: translateX(0); opacity: 1; }
+  90%      { transform: translateX(4px) skewX(1deg); opacity: 0.85; }
+  92%      { transform: translateX(-2px); opacity: 1; }
+  95%      { transform: translateX(3px) skewX(-0.5deg); opacity: 0.9; }
+  97%, 100% { transform: translateX(0); opacity: 1; }
+}
+
 .landing-gradient-text {
-  background: linear-gradient(135deg, #00FF41 0%, #AAFFAA 50%, #00FF41 100%);
-  background-size: 200% auto;
+  background: linear-gradient(135deg, #00FF41 0%, #AAFFAA 25%, #00FF41 50%, #88FFAA 75%, #00FF41 100%);
+  background-size: 300% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: landing-gradient-shift 4s ease infinite;
+  animation: landing-gradient-shift 5s ease infinite;
 }
 
 @keyframes landing-gradient-shift {
   0%, 100% { background-position: 0% center; }
-  50%      { background-position: 200% center; }
+  50%      { background-position: 300% center; }
 }
 
 .landing-hero-sub {
@@ -275,6 +375,31 @@ button:hover {
   max-width: 560px;
   margin: 0 auto 2.5rem;
   text-shadow: none;
+}
+
+/* ── Scroll Hint ──────────────────────────────────────────── */
+.landing-scroll-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+}
+
+.landing-scroll-arrow {
+  font-size: 1.2rem;
+  color: rgba(0, 255, 65, 0.35);
+}
+
+.landing-scroll-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(0, 204, 53, 0.2);
 }
 
 /* ── CTA Buttons ──────────────────────────────────────────── */
@@ -324,6 +449,22 @@ button:hover {
   transition: opacity 0.3s;
 }
 .landing-btn-primary:hover .landing-btn-glow { opacity: 1; }
+
+/* Button shimmer sweep */
+.landing-btn-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: landing-btn-shimmer-anim 3s infinite;
+}
+
+@keyframes landing-btn-shimmer-anim {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
 
 .landing-btn-arrow {
   transition: transform 0.2s;
@@ -375,6 +516,7 @@ button:hover {
   background: rgba(0, 255, 65, 0.03);
   color: rgba(0, 204, 53, 0.55);
   transition: all 0.2s;
+  backdrop-filter: blur(4px);
 }
 
 .landing-lang-pill:hover {
@@ -448,7 +590,9 @@ button:hover {
   background: rgba(0, 10, 0, 0.9);
   box-shadow:
     0 0 40px rgba(0, 255, 65, 0.06),
+    0 0 80px rgba(0, 255, 65, 0.03),
     0 20px 60px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
 }
 
 .landing-demo-titlebar {
@@ -458,6 +602,7 @@ button:hover {
   padding: 12px 16px;
   background: rgba(0, 14, 0, 0.95);
   border-bottom: 1px solid rgba(0, 255, 65, 0.08);
+  position: relative;
 }
 
 .landing-dot {
@@ -465,9 +610,9 @@ button:hover {
   height: 10px;
   border-radius: 50%;
 }
-.landing-dot--red    { background: #FF5F57; }
-.landing-dot--yellow { background: #FEBC2E; }
-.landing-dot--green  { background: #28C840; }
+.landing-dot--red    { background: #FF5F57; box-shadow: 0 0 6px rgba(255,95,87,0.3); }
+.landing-dot--yellow { background: #FEBC2E; box-shadow: 0 0 6px rgba(254,188,46,0.3); }
+.landing-dot--green  { background: #28C840; box-shadow: 0 0 6px rgba(40,200,64,0.3); }
 
 .landing-demo-filename {
   margin-left: 8px;
@@ -476,12 +621,27 @@ button:hover {
   letter-spacing: 0.05em;
 }
 
+/* Live recording pulse on demo window */
+.landing-demo-pulse {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FF4444;
+  box-shadow: 0 0 8px rgba(255,68,68,0.6);
+  animation: cursorPulse 1.5s ease-in-out infinite;
+}
+
 .landing-demo-metrics {
   display: flex;
   gap: 24px;
   padding: 10px 20px;
   border-bottom: 1px solid rgba(0, 255, 65, 0.06);
   background: rgba(0, 8, 0, 0.5);
+  align-items: center;
 }
 
 .landing-metric-label {
@@ -496,6 +656,23 @@ button:hover {
   font-weight: 700;
   color: #00FF41;
   text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+}
+
+/* Mini WPM progress bar in demo */
+.landing-demo-wpm-bar {
+  flex: 1;
+  height: 3px;
+  background: rgba(0, 255, 65, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-left: auto;
+}
+
+.landing-demo-wpm-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00FF41, #AAFFAA);
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
 }
 
 .landing-demo-code {
@@ -525,6 +702,7 @@ button:hover {
 .landing-ch-correct {
   color: #00FF41;
   text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+  transition: color 0.05s;
 }
 
 .landing-ch-cursor {
@@ -535,7 +713,7 @@ button:hover {
   box-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
 }
 
-/* ── Feature Cards ────────────────────────────────────────── */
+/* ── Feature Cards with 3D Tilt ───────────────────────────── */
 .landing-features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -550,7 +728,48 @@ button:hover {
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(8px);
 }
+
+/* Animated gradient border on hover */
+.landing-feature-border-anim {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  padding: 1px;
+  background: linear-gradient(135deg, transparent 40%, rgba(0,255,65,0.2), transparent 60%);
+  background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  animation: landing-border-rotate 4s linear infinite;
+}
+
+.landing-feature-card:hover .landing-feature-border-anim { opacity: 1; }
+
+@keyframes landing-border-rotate {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Inner glow effect on card hover */
+.landing-feature-card-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(0,255,65,0.06) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.landing-feature-card:hover .landing-feature-card-glow { opacity: 1; }
 
 .landing-feature-card::before {
   content: '';
@@ -559,7 +778,7 @@ button:hover {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,255,65,0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0,255,65,0.3), transparent);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -567,9 +786,9 @@ button:hover {
 .landing-feature-card:hover {
   border-color: rgba(0, 255, 65, 0.2);
   background: rgba(0, 18, 0, 0.7);
-  transform: translateY(-3px);
   box-shadow:
     0 0 30px rgba(0, 255, 65, 0.05),
+    0 0 60px rgba(0, 255, 65, 0.02),
     0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
@@ -586,6 +805,8 @@ button:hover {
   border-radius: 10px;
   background: rgba(0, 255, 65, 0.06);
   border: 1px solid rgba(0, 255, 65, 0.1);
+  position: relative;
+  z-index: 1;
 }
 
 .landing-feature-title {
@@ -594,6 +815,8 @@ button:hover {
   color: #00FF41;
   margin-bottom: 8px;
   letter-spacing: 0.02em;
+  position: relative;
+  z-index: 1;
 }
 
 .landing-feature-desc {
@@ -601,6 +824,8 @@ button:hover {
   color: rgba(0, 204, 53, 0.45);
   line-height: 1.7;
   text-shadow: none;
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Steps ────────────────────────────────────────────────── */
@@ -621,6 +846,8 @@ button:hover {
   border: 1px solid rgba(0, 255, 65, 0.08);
   background: rgba(0, 10, 0, 0.4);
   transition: all 0.3s ease;
+  position: relative;
+  backdrop-filter: blur(4px);
 }
 
 .landing-step-card:hover {
@@ -634,13 +861,24 @@ button:hover {
   color: rgba(0, 255, 65, 0.12);
   line-height: 1;
   min-width: 50px;
-  transition: color 0.3s;
+  transition: all 0.3s;
 }
 
 .landing-step-card:hover .landing-step-num {
-  color: rgba(0, 255, 65, 0.25);
-  text-shadow: 0 0 20px rgba(0, 255, 65, 0.15);
+  color: rgba(0, 255, 65, 0.3);
+  text-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
 }
+
+.landing-step-connector {
+  position: absolute;
+  left: 55px;
+  bottom: -20px;
+  width: 1px;
+  height: 20px;
+  background: rgba(0, 255, 65, 0.08);
+}
+
+.landing-step-card:last-child .landing-step-connector { display: none; }
 
 .landing-step-title {
   font-size: 0.95rem;
@@ -670,11 +908,11 @@ button:hover {
   border: 1px solid rgba(0, 255, 65, 0.08);
   background: rgba(0, 14, 0, 0.3);
   transition: all 0.3s;
+  backdrop-filter: blur(4px);
 }
 
 .landing-stat-card:hover {
   border-color: rgba(0, 255, 65, 0.18);
-  transform: translateY(-2px);
 }
 
 .landing-stat-value {
@@ -692,6 +930,76 @@ button:hover {
   color: rgba(0, 204, 53, 0.35);
 }
 
+/* ── Testimonials ─────────────────────────────────────────── */
+.landing-testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.landing-testimonial-card {
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 65, 0.08);
+  background: rgba(0, 10, 0, 0.4);
+  position: relative;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s;
+}
+
+.landing-testimonial-card:hover {
+  border-color: rgba(0, 255, 65, 0.18);
+  background: rgba(0, 14, 0, 0.5);
+}
+
+.landing-testimonial-quote {
+  font-size: 2.5rem;
+  color: rgba(0, 255, 65, 0.1);
+  line-height: 1;
+  margin-bottom: 8px;
+  font-family: Georgia, serif;
+}
+
+.landing-testimonial-text {
+  font-size: 0.8rem;
+  color: rgba(0, 204, 53, 0.55);
+  line-height: 1.7;
+  text-shadow: none;
+  margin-bottom: 20px;
+}
+
+.landing-testimonial-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.landing-testimonial-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #00FF41;
+}
+
+.landing-testimonial-role {
+  font-size: 0.6rem;
+  color: rgba(0, 204, 53, 0.3);
+  letter-spacing: 0.1em;
+}
+
+.landing-testimonial-wpm {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #00FF41;
+  text-shadow: 0 0 12px rgba(0, 255, 65, 0.4);
+}
+
+.landing-testimonial-wpm span {
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+
 /* ── CTA Section ──────────────────────────────────────────── */
 .landing-cta-section {
   padding-top: 2rem;
@@ -706,6 +1014,7 @@ button:hover {
   background: rgba(0, 14, 0, 0.4);
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(8px);
 }
 
 .landing-cta-box::before {
@@ -716,11 +1025,32 @@ button:hover {
   pointer-events: none;
 }
 
+/* Animated orb inside CTA */
+.landing-cta-orb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,255,65,0.06) 0%, transparent 70%);
+  animation: landing-cta-orb-pulse 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes landing-cta-orb-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  50%      { transform: translate(-50%, -50%) scale(1.3); opacity: 0.8; }
+}
+
 .landing-cta-title {
   font-size: clamp(1.4rem, 3vw, 2rem);
   font-weight: 700;
   color: #00FF41;
   margin-bottom: 0.75rem;
+  position: relative;
+  z-index: 1;
 }
 
 .landing-cta-sub {
@@ -728,6 +1058,8 @@ button:hover {
   color: rgba(0, 204, 53, 0.45);
   text-shadow: none;
   margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Footer ───────────────────────────────────────────────── */
@@ -757,9 +1089,12 @@ button:hover {
   .landing-section { padding: 3rem 1.5rem; }
   .landing-features-grid { grid-template-columns: 1fr; }
   .landing-step-card { flex-direction: column; gap: 12px; }
+  .landing-step-connector { display: none; }
   .landing-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .landing-testimonials-grid { grid-template-columns: 1fr; }
   .landing-demo-code { font-size: 0.65rem; padding: 12px; }
   .landing-hero-ctas { flex-direction: column; }
   .landing-btn-primary,
   .landing-btn-secondary { width: 100%; justify-content: center; }
+  .landing-3d-bg { opacity: 0.4; }
 }

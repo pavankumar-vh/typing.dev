@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom'
-import Landing from './pages/Landing.jsx'
+const Landing = lazy(() => import('./pages/Landing.jsx'))
 import Home from './pages/Home.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
 import Stats from './pages/Stats.jsx'
@@ -149,7 +149,7 @@ function AppShell({ booted, setBooted }) {
         </header>}
 
         <Routes>
-          <Route path="/"            element={<Landing />} />
+          <Route path="/"            element={<Suspense fallback={<div className="min-h-screen bg-bg" />}><Landing /></Suspense>} />
           <Route path="/test"        element={<Home />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/stats"       element={<Stats />} />
