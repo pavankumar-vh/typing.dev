@@ -4,6 +4,7 @@ import mongoose from 'mongoose'
 import os from 'os'
 import sessionRoutes from './routes/sessions.js'
 import snippetRoutes from './routes/snippets.js'
+import challengeRoutes from './routes/challenges.js'
 import { validateSession } from './middleware/validate.js'
 import { errorHandler } from './middleware/errorHandler.js'
 
@@ -89,6 +90,7 @@ app.get('/api/health', (_req, res) => {
 app.post('/api/sessions', validateSession)
 app.use('/api/sessions', sessionRoutes)
 app.use('/api/snippets', snippetRoutes)
+app.use('/api/challenges', challengeRoutes)
 
 // ── 404 handler ───────────────────────────────────────────
 app.use((_req, res) => {

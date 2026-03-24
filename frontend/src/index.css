@@ -2297,6 +2297,143 @@ button:hover {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   CHALLENGE NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════ */
+
+.challenge-notif-wrap {
+  position: relative;
+}
+.challenge-bell {
+  font-size: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,10,0,0.9);
+  border: 1.5px solid rgba(0,100,0,0.3);
+  color: rgba(0,204,53,0.4);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.challenge-bell:hover {
+  border-color: rgba(0,255,65,0.4);
+  color: #00FF41;
+  box-shadow: 0 0 10px rgba(0,255,65,0.15);
+}
+.challenge-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FF4444;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(255,68,68,0.5);
+  animation: challenge-pulse 2s ease-in-out infinite;
+}
+@keyframes challenge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.challenge-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 260px;
+  max-width: 320px;
+  background: rgba(0,8,0,0.97);
+  border: 1px solid rgba(0,100,0,0.3);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(0,255,65,0.05);
+  z-index: 200;
+}
+.challenge-empty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(0,204,53,0.2);
+  text-align: center;
+  padding: 16px 12px;
+  letter-spacing: 0.08em;
+}
+.challenge-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: background 0.12s;
+}
+.challenge-item:hover {
+  background: rgba(0,255,65,0.04);
+}
+.challenge-from {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.challenge-from-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #00FF41;
+}
+.challenge-from-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,180,0,0.5);
+  letter-spacing: 0.06em;
+}
+.challenge-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.challenge-accept {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,255,65,0.4);
+  background: rgba(0,255,65,0.08);
+  color: #00FF41;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.challenge-accept:hover {
+  background: rgba(0,255,65,0.18);
+  box-shadow: 0 0 10px rgba(0,255,65,0.2);
+}
+.challenge-decline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,68,68,0.2);
+  background: transparent;
+  color: rgba(255,68,68,0.4);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.challenge-decline:hover {
+  border-color: rgba(255,68,68,0.4);
+  color: rgba(255,68,68,0.7);
+}
+
+/* ═══════════════════════════════════════════════════════════
    ENHANCED NAVIGATION
    ═══════════════════════════════════════════════════════════ */
 

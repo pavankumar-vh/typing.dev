@@ -159,14 +159,27 @@ export default function Battle() {
         })
         .catch(() => {})
       s.on('connect', () => {
+        const myId = user?.uid || `anon-${Math.random().toString(36).slice(2, 8)}`
+        const myName = user?.displayName || localStorage.getItem('profile_name') || 'anonymous'
         s.emit('battle:create', {
-          userId: user?.uid || `anon-${Math.random().toString(36).slice(2, 8)}`,
-          displayName: user?.displayName || localStorage.getItem('profile_name') || 'anonymous',
+          userId: myId,
+          displayName: myName,
           language: language || 'javascript',
         }, (res) => {
           if (res.ok) {
             setRoomCode(res.roomCode)
             setPhase('waiting')
+            // Send in-app challenge notification to the opponent
+            fetch(`${API_BASE}/api/challenges`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fromUserId: myId,
+                fromDisplayName: myName,
+                toUserId: opp,
+                roomCode: res.roomCode,
+              }),
+            }).catch(() => {})
           } else {
             setError(res.error || 'Could not create room')
           }

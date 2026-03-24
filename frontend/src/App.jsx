@@ -1,5 +1,5 @@
-import { useState, lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom'
+import { useState, lazy, Suspense, useEffect, useCallback, useRef } from 'react'
+import { BrowserRouter, Routes, Route, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 const Landing = lazy(() => import('./pages/Landing.jsx'))
 import Home from './pages/Home.jsx'
@@ -51,6 +51,91 @@ function Avatar() {
     >
       {initials}
     </NavLink>
+  )
+}
+
+const API_BASE = import.meta.env.VITE_API_URL || ''
+
+function ChallengeNotif() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [challenges, setChallenges] = useState([])
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  const fetchChallenges = useCallback(() => {
+    if (!user?.uid) return
+    fetch(`${API_BASE}/api/challenges/${encodeURIComponent(user.uid)}`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setChallenges(d.data) })
+      .catch(() => {})
+  }, [user?.uid])
+
+  // Poll every 8 seconds
+  useEffect(() => {
+    fetchChallenges()
+    const iv = setInterval(fetchChallenges, 8000)
+    return () => clearInterval(iv)
+  }, [fetchChallenges])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  function acceptChallenge(c) {
+    fetch(`${API_BASE}/api/challenges/${c._id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'accepted' }),
+    }).catch(() => {})
+    setChallenges(prev => prev.filter(x => x._id !== c._id))
+    setOpen(false)
+    navigate(`/battle?room=${c.roomCode}`)
+  }
+
+  function dismissChallenge(c) {
+    fetch(`${API_BASE}/api/challenges/${c._id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'declined' }),
+    }).catch(() => {})
+    setChallenges(prev => prev.filter(x => x._id !== c._id))
+  }
+
+  if (!user) return null
+
+  return (
+    <div className="challenge-notif-wrap" ref={ref}>
+      <button className="challenge-bell" onClick={() => setOpen(p => !p)}>
+        ⚔
+        {challenges.length > 0 && (
+          <span className="challenge-badge">{challenges.length}</span>
+        )}
+      </button>
+      {open && (
+        <div className="challenge-dropdown">
+          {challenges.length === 0 ? (
+            <div className="challenge-empty">no challenges</div>
+          ) : (
+            challenges.map(c => (
+              <div key={c._id} className="challenge-item">
+                <div className="challenge-from">
+                  <span className="challenge-from-name">{c.fromDisplayName}</span>
+                  <span className="challenge-from-label">challenged you!</span>
+                </div>
+                <div className="challenge-item-actions">
+                  <button className="challenge-accept" onClick={() => acceptChallenge(c)}>accept</button>
+                  <button className="challenge-decline" onClick={() => dismissChallenge(c)}>✕</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -122,7 +207,10 @@ function AppShell({ booted, setBooted }) {
                 )}
               </NavLink>
             ) : (
-              <Avatar />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <ChallengeNotif />
+                <Avatar />
+              </div>
             )}
           </div>
         </motion.header>}
