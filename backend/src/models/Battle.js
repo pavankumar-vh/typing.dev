@@ -12,7 +12,7 @@ const playerSchema = new mongoose.Schema({
   progress:    { type: Number, default: 0 },   // 0-100
   finished:    { type: Boolean, default: false },
   finishedAt:  { type: Date, default: null },
-}, { _id: false })
+}, { _id: false, suppressReservedKeysWarning: true })
 
 const battleSchema = new mongoose.Schema(
   {
