@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom'
+import Landing from './pages/Landing.jsx'
 import Home from './pages/Home.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
 import Stats from './pages/Stats.jsx'
@@ -14,7 +15,7 @@ import { ConfigProvider } from './context/ConfigContext.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 
 const NAV = [
-  { to: '/',            label: 'test',       end: true },
+  { to: '/test',        label: 'test',       end: true },
   { to: '/leaderboard', label: 'leaderboard' },
   { to: '/stats',       label: 'stats'       },
   { to: '/my-stats',    label: 'my stats'    },
@@ -50,6 +51,8 @@ function Avatar() {
 
 function AppShell({ booted, setBooted }) {
   const { user, loading } = useAuth()
+  const location = useLocation()
+  const isLanding = location.pathname === '/'
 
   if (loading) return null  // wait for auth state before rendering
 
@@ -58,14 +61,14 @@ function AppShell({ booted, setBooted }) {
       <div className="crt-scanlines" aria-hidden="true" />
       <div className="crt-vignette" aria-hidden="true" />
 
-      {!booted && <BootScreen onComplete={() => setBooted(true)} />}
+      {!booted && !isLanding && <BootScreen onComplete={() => setBooted(true)} />}
 
       <div
         className="crt-screen"
-        style={{ opacity: booted ? 1 : 0, transition: 'opacity 0.5s ease 0.2s' }}
+        style={{ opacity: (booted || isLanding) ? 1 : 0, transition: 'opacity 0.5s ease 0.2s' }}
       >
-        {/* ── Header ── */}
-        <header
+        {/* ── Header (hidden on landing page) ── */}
+        {!isLanding && <header
           className="px-8 py-4 flex items-center justify-between"
           style={{
             borderBottom: '1px solid rgba(0,255,65,0.1)',
@@ -143,10 +146,11 @@ function AppShell({ booted, setBooted }) {
               <Avatar />
             )}
           </div>
-        </header>
+        </header>}
 
         <Routes>
-          <Route path="/"            element={<Home />} />
+          <Route path="/"            element={<Landing />} />
+          <Route path="/test"        element={<Home />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/stats"       element={<Stats />} />
           <Route path="/my-stats"    element={<MyStats />} />
