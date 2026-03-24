@@ -3,10 +3,12 @@ import mongoose from 'mongoose'
 const playerSchema = new mongoose.Schema({
   userId:      { type: String, required: true },
   displayName: { type: String, default: 'anonymous' },
+  isBot:       { type: Boolean, default: false },
   wpm:         { type: Number, default: 0 },
   rawWpm:      { type: Number, default: 0 },
   accuracy:    { type: Number, default: 0 },
   errors:      { type: Number, default: 0 },
+  score:       { type: Number, default: 0 },
   progress:    { type: Number, default: 0 },   // 0-100
   finished:    { type: Boolean, default: false },
   finishedAt:  { type: Date, default: null },

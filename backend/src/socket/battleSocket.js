@@ -4,14 +4,13 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 
 // ── Room code generator ──────────────────────────────────
 function genCode() {
-  return crypto.randomBytes(3).toString('hex').toUpperCase() // 6 chars
+  return crypto.randomBytes(3).toString('hex').toUpperCase()
 }
 
 // ── Generate snippet for battle ──────────────────────────
 async function getSnippet(language, difficulty) {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    // Fallback snippet
     return {
       language,
       difficulty,
@@ -27,7 +26,7 @@ async function getSnippet(language, difficulty) {
       `Difficulty: ${difficulty}. No markdown fences, pure code only. Realistic and idiomatic.`
     )
     const text = result.response.text().trim()
-      .replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '') // strip fences if present
+      .replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '')
     return { language, difficulty, content: text }
   } catch {
     return {
@@ -37,8 +36,32 @@ async function getSnippet(language, difficulty) {
   }
 }
 
+// ── Score calculator ─────────────────────────────────────
+function calcScore(stats) {
+  const wpmScore = Math.round(stats.wpm * 10)
+  const accBonus = Math.round(stats.accuracy * 0.5)
+  const speedBonus = stats.wpm >= 80 ? 50 : stats.wpm >= 60 ? 30 : stats.wpm >= 40 ? 15 : 0
+  const perfectBonus = stats.accuracy === 100 ? 100 : stats.accuracy >= 98 ? 50 : 0
+  return wpmScore + accBonus + speedBonus + perfectBonus
+}
+
+// ── Bot names ────────────────────────────────────────────
+const BOT_NAMES = [
+  'syntax_bot', 'type_ghost', 'code_phantom', 'bit_runner',
+  'null_ptr', 'byte_blitz', 'algo_core', 'cpu_fingers',
+  'turing_jr', 'lambda_bot', 'vim_master', 'gcc_turbo',
+]
+function randomBotName() {
+  return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)]
+}
+
 // ── Quick match queue ────────────────────────────────────
-const matchQueue = new Map() // language -> { socketId, userId, displayName }
+const matchQueue = new Map()
+const activeTimers = new Map()
+const botIntervals = new Map()
+
+const BOT_WAIT_MS = 6000
+const BATTLE_DURATION = 60
 
 export function initBattleSocket(io) {
   const battleNsp = io.of('/battle')
@@ -79,11 +102,11 @@ export function initBattleSocket(io) {
         currentRoom = roomCode
         socket.join(roomCode)
 
-        // Notify both players
         battleNsp.to(roomCode).emit('battle:opponent-joined', {
           players: battle.players.map(p => ({
             userId: p.userId,
             displayName: p.displayName,
+            isBot: p.isBot || false,
           })),
           snippet: battle.snippet,
         })
@@ -98,11 +121,11 @@ export function initBattleSocket(io) {
     socket.on('battle:quick', async ({ userId, displayName, language }, cb) => {
       const lang = (language || 'javascript').toLowerCase()
 
-      // Check if someone is waiting
       const waiting = matchQueue.get(lang)
       if (waiting && waiting.userId !== userId) {
-        // Match found — create room and pair them
+        if (waiting.botTimer) clearTimeout(waiting.botTimer)
         matchQueue.delete(lang)
+
         const roomCode = genCode()
         const snippet = await getSnippet(lang, 'medium')
 
@@ -120,7 +143,6 @@ export function initBattleSocket(io) {
           currentRoom = roomCode
           socket.join(roomCode)
 
-          // Get the waiting player's socket and join them too
           const waitingSocket = battleNsp.sockets.get(waiting.socketId)
           if (waitingSocket) {
             waitingSocket.join(roomCode)
@@ -132,8 +154,10 @@ export function initBattleSocket(io) {
             players: battle.players.map(p => ({
               userId: p.userId,
               displayName: p.displayName,
+              isBot: false,
             })),
             snippet: battle.snippet,
+            isBot: false,
           }
 
           battleNsp.to(roomCode).emit('battle:matched', payload)
@@ -142,40 +166,125 @@ export function initBattleSocket(io) {
           cb({ ok: false, error: err.message })
         }
       } else {
-        // No one waiting — add to queue
-        matchQueue.set(lang, { socketId: socket.id, userId, displayName })
+        const botTimer = setTimeout(async () => {
+          const entry = matchQueue.get(lang)
+          if (!entry || entry.socketId !== socket.id) return
+          matchQueue.delete(lang)
+
+          const roomCode = genCode()
+          const botId = `bot-${crypto.randomBytes(4).toString('hex')}`
+          const botName = randomBotName()
+          const snippet = await getSnippet(lang, 'medium')
+
+          try {
+            const battle = await Battle.create({
+              roomCode,
+              snippet,
+              players: [
+                { userId, displayName },
+                { userId: botId, displayName: botName, isBot: true },
+              ],
+              status: 'waiting',
+            })
+
+            currentRoom = roomCode
+            socket.join(roomCode)
+
+            const payload = {
+              roomCode,
+              players: battle.players.map(p => ({
+                userId: p.userId,
+                displayName: p.displayName,
+                isBot: p.isBot || false,
+              })),
+              snippet: battle.snippet,
+              isBot: true,
+            }
+
+            socket.emit('battle:matched', payload)
+          } catch (err) {
+            console.error('[battle] bot spawn error:', err.message)
+          }
+        }, BOT_WAIT_MS)
+
+        matchQueue.set(lang, { socketId: socket.id, userId, displayName, botTimer })
         cb({ ok: true, queued: true })
       }
     })
 
-    // ── Player ready (both ready → countdown) ────────────
+    // ── Player ready ─────────────────────────────────────
     socket.on('battle:ready', async ({ roomCode }) => {
       const battle = await Battle.findOne({ roomCode })
       if (!battle || battle.players.length < 2) return
+      if (battle.status !== 'waiting') return
 
-      // Start countdown
       battle.status = 'countdown'
       await battle.save()
 
       battleNsp.to(roomCode).emit('battle:countdown', { seconds: 3 })
 
-      // After 3 seconds, start the battle
       setTimeout(async () => {
         const b = await Battle.findOne({ roomCode })
         if (!b || b.status !== 'countdown') return
         b.status = 'active'
         b.startedAt = new Date()
         await b.save()
+
         battleNsp.to(roomCode).emit('battle:start', {
           snippet: b.snippet,
           startedAt: b.startedAt,
         })
+
+        // Server-side battle timer
+        const timerId = setTimeout(async () => {
+          activeTimers.delete(roomCode)
+          const bt = await Battle.findOne({ roomCode })
+          if (!bt || bt.status !== 'active') return
+
+          bt.players.forEach(p => {
+            if (!p.finished) {
+              p.finished = true
+              p.finishedAt = new Date()
+              p.score = calcScore(p)
+            }
+          })
+          bt.status = 'finished'
+          bt.finishedAt = new Date()
+
+          const [p1, p2] = bt.players
+          p1.score = calcScore(p1)
+          p2.score = calcScore(p2)
+          if (p1.score === p2.score) {
+            bt.winnerId = null
+          } else {
+            bt.winnerId = p1.score > p2.score ? p1.userId : p2.userId
+          }
+          await bt.save()
+
+          if (botIntervals.has(roomCode)) {
+            clearInterval(botIntervals.get(roomCode))
+            botIntervals.delete(roomCode)
+          }
+
+          battleNsp.to(roomCode).emit('battle:time-up')
+          battleNsp.to(roomCode).emit('battle:result', {
+            players: bt.players,
+            winnerId: bt.winnerId,
+            isDraw: bt.winnerId === null,
+          })
+        }, BATTLE_DURATION * 1000)
+        activeTimers.set(roomCode, timerId)
+
+        // Bot simulation
+        const botPlayer = b.players.find(p => p.isBot)
+        if (botPlayer) {
+          startBotSimulation(battleNsp, roomCode, botPlayer, b.snippet.content)
+        }
       }, 3000)
     })
 
     // ── Real-time progress update ────────────────────────
     socket.on('battle:progress', ({ roomCode, userId, progress, wpm, accuracy }) => {
-      // Broadcast to opponent only
       socket.to(roomCode).emit('battle:opponent-progress', {
         userId, progress, wpm, accuracy,
       })
@@ -197,19 +306,31 @@ export function initBattleSocket(io) {
         player.progress = 100
         player.finished = true
         player.finishedAt = new Date()
+        player.score = calcScore(stats)
 
-        // Check if both finished
         const allDone = battle.players.every(p => p.finished)
         if (allDone) {
           battle.status = 'finished'
           battle.finishedAt = new Date()
 
-          // Determine winner (higher WPM wins, tie goes to better accuracy)
+          battle.players.forEach(p => {
+            if (!p.score) p.score = calcScore(p)
+          })
+
           const [p1, p2] = battle.players
-          if (p1.wpm > p2.wpm || (p1.wpm === p2.wpm && p1.accuracy >= p2.accuracy)) {
-            battle.winnerId = p1.userId
+          if (p1.score === p2.score) {
+            battle.winnerId = null
           } else {
-            battle.winnerId = p2.userId
+            battle.winnerId = p1.score > p2.score ? p1.userId : p2.userId
+          }
+
+          if (activeTimers.has(roomCode)) {
+            clearTimeout(activeTimers.get(roomCode))
+            activeTimers.delete(roomCode)
+          }
+          if (botIntervals.has(roomCode)) {
+            clearInterval(botIntervals.get(roomCode))
+            botIntervals.delete(roomCode)
           }
         }
 
@@ -219,12 +340,12 @@ export function initBattleSocket(io) {
           battleNsp.to(roomCode).emit('battle:result', {
             players: battle.players,
             winnerId: battle.winnerId,
+            isDraw: battle.winnerId === null,
           })
         } else {
-          // Notify opponent that this player finished
           socket.to(roomCode).emit('battle:opponent-finished', {
             userId,
-            stats: { wpm: stats.wpm, accuracy: stats.accuracy },
+            stats: { wpm: stats.wpm, accuracy: stats.accuracy, score: player.score },
           })
         }
       } catch (err) {
@@ -234,17 +355,24 @@ export function initBattleSocket(io) {
 
     // ── Disconnect / cleanup ─────────────────────────────
     socket.on('disconnect', async () => {
-      // Remove from match queue
       for (const [lang, entry] of matchQueue.entries()) {
         if (entry.socketId === socket.id) {
+          if (entry.botTimer) clearTimeout(entry.botTimer)
           matchQueue.delete(lang)
           break
         }
       }
 
-      // Notify room if in an active battle
       if (currentRoom) {
         socket.to(currentRoom).emit('battle:opponent-disconnected')
+        if (activeTimers.has(currentRoom)) {
+          clearTimeout(activeTimers.get(currentRoom))
+          activeTimers.delete(currentRoom)
+        }
+        if (botIntervals.has(currentRoom)) {
+          clearInterval(botIntervals.get(currentRoom))
+          botIntervals.delete(currentRoom)
+        }
       }
     })
 
@@ -253,8 +381,100 @@ export function initBattleSocket(io) {
       if (currentRoom) {
         socket.to(currentRoom).emit('battle:opponent-disconnected')
         socket.leave(currentRoom)
+        if (activeTimers.has(currentRoom)) {
+          clearTimeout(activeTimers.get(currentRoom))
+          activeTimers.delete(currentRoom)
+        }
+        if (botIntervals.has(currentRoom)) {
+          clearInterval(botIntervals.get(currentRoom))
+          botIntervals.delete(currentRoom)
+        }
         currentRoom = null
       }
     })
   })
+}
+
+// ── Bot typing simulation ────────────────────────────────
+function startBotSimulation(nsp, roomCode, botPlayer, snippetContent) {
+  const totalChars = snippetContent.length
+  const botWpm = 35 + Math.floor(Math.random() * 36)
+  const charsPerSec = (botWpm * 5) / 60
+  let charsTyped = 0
+  const botAccuracy = 90 + Math.floor(Math.random() * 10)
+
+  const iv = setInterval(async () => {
+    const variance = 0.5 + Math.random() * 1.5
+    charsTyped = Math.min(charsTyped + charsPerSec * variance, totalChars)
+    const progress = Math.min(Math.round((charsTyped / totalChars) * 100), 100)
+
+    nsp.to(roomCode).emit('battle:opponent-progress', {
+      userId: botPlayer.userId,
+      progress,
+      wpm: botWpm + Math.floor(Math.random() * 6 - 3),
+      accuracy: botAccuracy,
+    })
+
+    if (charsTyped >= totalChars) {
+      clearInterval(iv)
+      botIntervals.delete(roomCode)
+
+      const errors = Math.round(totalChars * (1 - botAccuracy / 100))
+      const stats = { wpm: botWpm, rawWpm: botWpm + 3, accuracy: botAccuracy, errors }
+
+      try {
+        const battle = await Battle.findOne({ roomCode })
+        if (!battle || battle.status !== 'active') return
+
+        const bp = battle.players.find(p => p.userId === botPlayer.userId)
+        if (!bp || bp.finished) return
+
+        bp.wpm = stats.wpm
+        bp.rawWpm = stats.rawWpm
+        bp.accuracy = stats.accuracy
+        bp.errors = stats.errors
+        bp.progress = 100
+        bp.finished = true
+        bp.finishedAt = new Date()
+        bp.score = calcScore(stats)
+
+        const allDone = battle.players.every(p => p.finished)
+        if (allDone) {
+          battle.status = 'finished'
+          battle.finishedAt = new Date()
+          battle.players.forEach(p => { if (!p.score) p.score = calcScore(p) })
+          const [p1, p2] = battle.players
+          if (p1.score === p2.score) {
+            battle.winnerId = null
+          } else {
+            battle.winnerId = p1.score > p2.score ? p1.userId : p2.userId
+          }
+
+          if (activeTimers.has(roomCode)) {
+            clearTimeout(activeTimers.get(roomCode))
+            activeTimers.delete(roomCode)
+          }
+        }
+
+        await battle.save()
+
+        if (allDone) {
+          nsp.to(roomCode).emit('battle:result', {
+            players: battle.players,
+            winnerId: battle.winnerId,
+            isDraw: battle.winnerId === null,
+          })
+        } else {
+          nsp.to(roomCode).emit('battle:opponent-finished', {
+            userId: botPlayer.userId,
+            stats: { wpm: stats.wpm, accuracy: stats.accuracy, score: bp.score },
+          })
+        }
+      } catch (err) {
+        console.error('[battle] bot finish error:', err.message)
+      }
+    }
+  }, 1000)
+
+  botIntervals.set(roomCode, iv)
 }

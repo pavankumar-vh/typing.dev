@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { io } from 'socket.io-client'
 import { useAuth } from '../context/AuthContext.jsx'
-import { useConfig, LANGUAGES, LANG_BADGE } from '../context/ConfigContext.jsx'
+import { useConfig } from '../context/ConfigContext.jsx'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
-const FONT = 'JetBrains Mono, monospace'
+const BATTLE_DURATION = 60
 
 /*
   Battle phases:
@@ -32,6 +32,7 @@ export default function Battle() {
   const [players, setPlayers] = useState([])
   const [countdown, setCountdown] = useState(0)
   const [error, setError] = useState('')
+  const [isBot, setIsBot] = useState(false)
 
   // Typing state
   const [typed, setTyped] = useState('')
@@ -40,12 +41,24 @@ export default function Battle() {
   const [oppStats, setOppStats] = useState({ wpm: 0, accuracy: 100, progress: 0, finished: false })
   const [result, setResult] = useState(null)
 
+  // Timer
+  const [timeLeft, setTimeLeft] = useState(BATTLE_DURATION)
+  const timerRef = useRef(null)
+
   const typingRef = useRef(null)
   const socketRef = useRef(null)
-  const progressIntervalRef = useRef(null)
+  const phaseRef = useRef('lobby')
+  const finishedRef = useRef(false)
 
-  const userId = user?.uid || `anon-${Math.random().toString(36).slice(2, 8)}`
+  // Stable userId — won't change across renders for anon users
+  const userId = useMemo(
+    () => user?.uid || `anon-${Math.random().toString(36).slice(2, 8)}`,
+    [user?.uid]
+  )
   const displayName = user?.displayName || localStorage.getItem('profile_name') || 'anonymous'
+
+  // Keep phaseRef in sync
+  useEffect(() => { phaseRef.current = phase }, [phase])
 
   // Connect socket on mount
   useEffect(() => {
@@ -61,10 +74,11 @@ export default function Battle() {
       setPhase('matched')
     })
 
-    s.on('battle:matched', ({ roomCode: rc, players: p, snippet: sn }) => {
+    s.on('battle:matched', ({ roomCode: rc, players: p, snippet: sn, isBot: bot }) => {
       setRoomCode(rc)
       setPlayers(p)
       setSnippet(sn)
+      if (bot) setIsBot(true)
       setPhase('matched')
     })
 
@@ -84,6 +98,8 @@ export default function Battle() {
       setPhase('active')
       setStartTime(Date.now())
       setTyped('')
+      setTimeLeft(BATTLE_DURATION)
+      finishedRef.current = false
     })
 
     s.on('battle:opponent-progress', ({ progress, wpm, accuracy }) => {
@@ -94,16 +110,22 @@ export default function Battle() {
       setOppStats(prev => ({ ...prev, ...stats, finished: true, progress: 100 }))
     })
 
-    s.on('battle:result', ({ players: p, winnerId }) => {
-      setResult({ players: p, winnerId })
+    s.on('battle:result', ({ players: p, winnerId, isDraw }) => {
+      setResult({ players: p, winnerId, isDraw: isDraw || false })
       setPhase('finished')
-      clearInterval(progressIntervalRef.current)
+      clearInterval(timerRef.current)
+    })
+
+    s.on('battle:time-up', () => {
+      clearInterval(timerRef.current)
+      setTimeLeft(0)
     })
 
     s.on('battle:opponent-disconnected', () => {
-      if (phase !== 'finished') {
+      if (phaseRef.current !== 'finished') {
         setError('Opponent disconnected')
         setPhase('lobby')
+        clearInterval(timerRef.current)
       }
     })
 
@@ -115,9 +137,25 @@ export default function Battle() {
 
     return () => {
       s.disconnect()
-      clearInterval(progressIntervalRef.current)
+      clearInterval(timerRef.current)
     }
   }, [])
+
+  // Client-side timer display (server is authoritative)
+  useEffect(() => {
+    if (phase === 'active') {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+      return () => clearInterval(timerRef.current)
+    }
+  }, [phase])
 
   // ── Actions ──────────────────────────────────────────
   function createRoom() {
@@ -169,10 +207,10 @@ export default function Battle() {
 
   // ── Typing handler ──────────────────────────────────
   const handleKeyDown = useCallback((e) => {
-    if (phase !== 'active' || !snippet) return
+    if (phaseRef.current !== 'active' || !snippet || finishedRef.current) return
 
     const code = snippet.content
-    if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') return
+    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Escape'].includes(e.key)) return
     e.preventDefault()
 
     setTyped(prev => {
@@ -186,30 +224,36 @@ export default function Battle() {
       } else if (e.key.length === 1) {
         next = prev + e.key
       }
-
-      // Calculate stats
-      const elapsed = Date.now() - startTime
-      const correct = [...next].filter((ch, i) => ch === code[i]).length
-      const totalTyped = next.length
-      const wpm = elapsed > 0 ? Math.round((correct / 5) / (elapsed / 60000)) : 0
-      const accuracy = totalTyped > 0 ? Math.round((correct / totalTyped) * 100) : 100
-      const progress = Math.round((next.length / code.length) * 100)
-
-      setMyStats({ wpm, accuracy, progress })
-
-      // Send progress
-      socketRef.current?.emit('battle:progress', { roomCode, userId, progress, wpm, accuracy })
-
-      // Check if finished
-      if (next.length >= code.length) {
-        const finalStats = { wpm, rawWpm: wpm, accuracy, errors: totalTyped - correct }
-        socketRef.current?.emit('battle:finish', { roomCode, userId, stats: finalStats })
-        setMyStats({ wpm, accuracy, progress: 100 })
-      }
-
       return next
     })
-  }, [phase, snippet, startTime, roomCode, userId])
+  }, [snippet])
+
+  // Separate effect for stats calculation — avoid setState inside updater
+  useEffect(() => {
+    if (phase !== 'active' || !snippet || !startTime || finishedRef.current) return
+
+    const code = snippet.content
+    const elapsed = Date.now() - startTime
+    const correct = [...typed].filter((ch, i) => ch === code[i]).length
+    const totalTyped = typed.length
+    const wpm = elapsed > 2000 ? Math.round((correct / 5) / (elapsed / 60000)) : 0
+    const accuracy = totalTyped > 0 ? Math.round((correct / totalTyped) * 100) : 100
+    const progress = Math.min(Math.round((typed.length / code.length) * 100), 100)
+
+    setMyStats({ wpm, accuracy, progress })
+
+    // Send progress to opponent
+    socketRef.current?.emit('battle:progress', { roomCode, userId, progress, wpm, accuracy })
+
+    // Check if finished
+    if (typed.length >= code.length && !finishedRef.current) {
+      finishedRef.current = true
+      const errors = totalTyped - correct
+      const finalStats = { wpm, rawWpm: wpm, accuracy, errors }
+      socketRef.current?.emit('battle:finish', { roomCode, userId, stats: finalStats })
+      setMyStats({ wpm, accuracy, progress: 100 })
+    }
+  }, [typed, phase, snippet, startTime, roomCode, userId])
 
   useEffect(() => {
     if (phase === 'active') {
@@ -236,11 +280,42 @@ export default function Battle() {
     setOppStats({ wpm: 0, accuracy: 100, progress: 0, finished: false })
     setResult(null)
     setError('')
+    setIsBot(false)
+    setTimeLeft(BATTLE_DURATION)
+    finishedRef.current = false
+    clearInterval(timerRef.current)
+  }
+
+  function quickRematch() {
+    resetBattle()
+    setTimeout(() => quickMatch(), 100)
+  }
+
+  // ── Score helpers ──────────────────────────────────
+  function calcScore(p) {
+    if (!p) return 0
+    const wpmScore = Math.round(p.wpm * 10)
+    const accBonus = Math.round(p.accuracy * 0.5)
+    const speedBonus = p.wpm >= 80 ? 50 : p.wpm >= 60 ? 30 : p.wpm >= 40 ? 15 : 0
+    const perfectBonus = p.accuracy === 100 ? 100 : p.accuracy >= 98 ? 50 : 0
+    return wpmScore + accBonus + speedBonus + perfectBonus
+  }
+
+  function getRank(score) {
+    if (score >= 1200) return { label: 'S+', color: '#FFD700' }
+    if (score >= 900)  return { label: 'S', color: '#FFD700' }
+    if (score >= 700)  return { label: 'A', color: '#00FF41' }
+    if (score >= 500)  return { label: 'B', color: '#00CCFF' }
+    if (score >= 300)  return { label: 'C', color: '#FF9900' }
+    return { label: 'D', color: '#FF4444' }
   }
 
   // ── Render helpers ─────────────────────────────────
   const me = players.find(p => p.userId === userId)
   const opponent = players.find(p => p.userId !== userId)
+
+  const timerPercent = (timeLeft / BATTLE_DURATION) * 100
+  const timerUrgent = timeLeft <= 10
 
   return (
     <motion.div
@@ -262,7 +337,9 @@ export default function Battle() {
         </div>
 
         {error && (
-          <div className="battle-error">{error}</div>
+          <div className="battle-error" onClick={() => setError('')} style={{ cursor: 'pointer' }}>
+            {error} <span style={{ opacity: 0.3, marginLeft: 8 }}>click to dismiss</span>
+          </div>
         )}
 
         <AnimatePresence mode="wait">
@@ -286,7 +363,7 @@ export default function Battle() {
                 <span className="battle-btn-icon">⚡</span>
                 <div>
                   <div className="battle-btn-title">quick match</div>
-                  <div className="battle-btn-desc">find an opponent instantly · {language}</div>
+                  <div className="battle-btn-desc">find an opponent or play a bot · {language}</div>
                 </div>
               </button>
 
@@ -337,7 +414,7 @@ export default function Battle() {
             >
               <div className="battle-pulse-ring" />
               <div className="battle-waiting-text">searching for opponent...</div>
-              <div className="battle-waiting-sub">{language} · quick match</div>
+              <div className="battle-waiting-sub">{language} · auto-bot if no one joins</div>
               <button onClick={resetBattle} className="battle-cancel-btn">cancel</button>
             </motion.div>
           )}
@@ -381,11 +458,14 @@ export default function Battle() {
                 <div className="battle-vs">VS</div>
 
                 <div className="battle-player-card">
-                  <div className="battle-player-avatar battle-player-avatar-opp">
-                    {(opponent?.displayName || '?')[0].toUpperCase()}
+                  <div className={`battle-player-avatar battle-player-avatar-opp ${isBot ? 'battle-avatar-bot' : ''}`}>
+                    {isBot ? '🤖' : (opponent?.displayName || '?')[0].toUpperCase()}
                   </div>
-                  <div className="battle-player-name">{opponent?.displayName || '...'}</div>
-                  <div className="battle-player-label">opponent</div>
+                  <div className="battle-player-name">
+                    {opponent?.displayName || '...'}
+                    {isBot && <span className="battle-bot-badge">BOT</span>}
+                  </div>
+                  <div className="battle-player-label">{isBot ? 'cpu' : 'opponent'}</div>
                 </div>
               </div>
 
@@ -394,6 +474,8 @@ export default function Battle() {
                   <span style={{ opacity: 0.3 }}>{snippet.language}</span>
                   <span style={{ opacity: 0.2 }}> · </span>
                   <span style={{ opacity: 0.3 }}>{snippet.content.split('\n').length} lines</span>
+                  <span style={{ opacity: 0.2 }}> · </span>
+                  <span style={{ opacity: 0.3 }}>{BATTLE_DURATION}s</span>
                 </div>
               )}
 
@@ -433,6 +515,18 @@ export default function Battle() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              {/* Timer bar */}
+              <div className={`battle-timer ${timerUrgent ? 'battle-timer-urgent' : ''}`}>
+                <div className="battle-timer-bar">
+                  <motion.div
+                    className="battle-timer-fill"
+                    animate={{ width: `${timerPercent}%` }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+                <span className="battle-timer-text">{timeLeft}s</span>
+              </div>
+
               {/* Progress bars */}
               <div className="battle-progress-section">
                 <div className="battle-progress-row">
@@ -447,7 +541,10 @@ export default function Battle() {
                   <span className="battle-progress-wpm">{myStats.wpm}</span>
                 </div>
                 <div className="battle-progress-row">
-                  <span className="battle-progress-name battle-opp-name">{opponent?.displayName || 'opponent'}</span>
+                  <span className="battle-progress-name battle-opp-name">
+                    {opponent?.displayName || 'opponent'}
+                    {isBot && <span className="battle-bot-tag">bot</span>}
+                  </span>
                   <div className="battle-progress-bar">
                     <motion.div
                       className="battle-progress-fill battle-progress-fill-opp"
@@ -458,6 +555,17 @@ export default function Battle() {
                   <span className="battle-progress-wpm battle-opp-name">{oppStats.wpm}</span>
                 </div>
               </div>
+
+              {/* Opponent done tag */}
+              {oppStats.finished && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="battle-opp-done-tag"
+                >
+                  ⚡ {opponent?.displayName || 'opponent'} finished — {oppStats.wpm} wpm
+                </motion.div>
+              )}
 
               {/* Typing area */}
               <div
@@ -484,6 +592,7 @@ export default function Battle() {
                 <div><span className="battle-stat-label">wpm</span> <span className="battle-stat-val">{myStats.wpm}</span></div>
                 <div><span className="battle-stat-label">acc</span> <span className="battle-stat-val">{myStats.accuracy}%</span></div>
                 <div><span className="battle-stat-label">progress</span> <span className="battle-stat-val">{myStats.progress}%</span></div>
+                <div><span className="battle-stat-label">score</span> <span className="battle-stat-val battle-score-live">{calcScore({ wpm: myStats.wpm, accuracy: myStats.accuracy })}</span></div>
               </div>
             </motion.div>
           )}
@@ -499,7 +608,12 @@ export default function Battle() {
             >
               {/* Winner banner */}
               <div className="battle-winner-banner">
-                {result.winnerId === userId ? (
+                {result.isDraw ? (
+                  <>
+                    <div className="battle-trophy">🤝</div>
+                    <div className="battle-draw-text">draw!</div>
+                  </>
+                ) : result.winnerId === userId ? (
                   <>
                     <div className="battle-trophy">🏆</div>
                     <div className="battle-winner-text">victory!</div>
@@ -515,14 +629,26 @@ export default function Battle() {
               {/* Comparison table */}
               <div className="battle-compare">
                 {result.players.map(p => {
-                  const isMe = p.userId === userId
-                  const isWinner = p.userId === result.winnerId
+                  const isWinner = !result.isDraw && p.userId === result.winnerId
+                  const score = calcScore(p)
+                  const rank = getRank(score)
                   return (
                     <div key={p.userId} className={`battle-compare-card ${isWinner ? 'battle-compare-winner' : ''}`}>
                       <div className="battle-compare-name">
                         {p.displayName}
+                        {p.isBot && <span className="battle-bot-badge">BOT</span>}
                         {isWinner && <span className="battle-crown">👑</span>}
                       </div>
+
+                      {/* Score + Rank */}
+                      <div className="battle-score-row">
+                        <span className="battle-score-rank" style={{ color: rank.color, borderColor: rank.color }}>{rank.label}</span>
+                        <div>
+                          <span className="battle-score-big">{score}</span>
+                          <span className="battle-compare-label">score</span>
+                        </div>
+                      </div>
+
                       <div className="battle-compare-stat">
                         <span className="battle-compare-val-big">{p.wpm}</span>
                         <span className="battle-compare-label">wpm</span>
@@ -533,11 +659,11 @@ export default function Battle() {
                           <span className="battle-compare-label">accuracy</span>
                         </div>
                         <div>
-                          <span className="battle-compare-val">{p.rawWpm}</span>
+                          <span className="battle-compare-val">{p.rawWpm || p.wpm}</span>
                           <span className="battle-compare-label">raw</span>
                         </div>
                         <div>
-                          <span className="battle-compare-val">{p.errors}</span>
+                          <span className="battle-compare-val">{p.errors || 0}</span>
                           <span className="battle-compare-label">errors</span>
                         </div>
                       </div>
@@ -546,9 +672,15 @@ export default function Battle() {
                 })}
               </div>
 
-              <button onClick={resetBattle} className="battle-rematch-btn">
-                new battle
-              </button>
+              {/* Action buttons */}
+              <div className="battle-result-actions">
+                <button onClick={quickRematch} className="battle-rematch-btn battle-quick-rematch">
+                  ⚡ quick rematch
+                </button>
+                <button onClick={resetBattle} className="battle-rematch-btn">
+                  ← back to lobby
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
