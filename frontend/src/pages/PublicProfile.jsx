@@ -215,6 +215,9 @@ export default function PublicProfile() {
         <Link to={`/battle?opponent=${userId}`} className="pub-challenge-btn">
           ⚔ challenge {displayName}
         </Link>
+        <div className="pub-challenge-hint">
+          creates a battle room · share the link with them to play
+        </div>
       </div>
     </motion.div>
   )

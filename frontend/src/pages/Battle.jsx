@@ -33,6 +33,8 @@ export default function Battle() {
   const [countdown, setCountdown] = useState(0)
   const [error, setError] = useState('')
   const [isBot, setIsBot] = useState(false)
+  const [challengeTarget, setChallengeTarget] = useState(null)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   // Typing state
   const [typed, setTyped] = useState('')
@@ -129,10 +131,47 @@ export default function Battle() {
       }
     })
 
-    // Auto-join if opponent param is set
+    // Auto-create room if challenging someone from their profile
     const opp = searchParams.get('opponent')
-    if (opp) {
-      // Create a room targeting that opponent (they'll need the code)
+    const joinParam = searchParams.get('room')
+    if (joinParam) {
+      // Auto-join a room from a shared challenge link
+      s.on('connect', () => {
+        s.emit('battle:join', {
+          roomCode: joinParam.toUpperCase(),
+          userId: user?.uid || `anon-${Math.random().toString(36).slice(2, 8)}`,
+          displayName: user?.displayName || localStorage.getItem('profile_name') || 'anonymous',
+        }, (res) => {
+          if (res.ok) {
+            setRoomCode(joinParam.toUpperCase())
+            if (res.snippet) setSnippet(res.snippet)
+          } else {
+            setError(res.error || 'Could not join room')
+          }
+        })
+      })
+    } else if (opp) {
+      // Fetch opponent name, then auto-create a room
+      fetch(`${API_BASE}/api/sessions/users/${encodeURIComponent(opp)}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) setChallengeTarget(d.data.displayName)
+        })
+        .catch(() => {})
+      s.on('connect', () => {
+        s.emit('battle:create', {
+          userId: user?.uid || `anon-${Math.random().toString(36).slice(2, 8)}`,
+          displayName: user?.displayName || localStorage.getItem('profile_name') || 'anonymous',
+          language: language || 'javascript',
+        }, (res) => {
+          if (res.ok) {
+            setRoomCode(res.roomCode)
+            setPhase('waiting')
+          } else {
+            setError(res.error || 'Could not create room')
+          }
+        })
+      })
     }
 
     return () => {
@@ -282,6 +321,8 @@ export default function Battle() {
     setError('')
     setIsBot(false)
     setTimeLeft(BATTLE_DURATION)
+    setChallengeTarget(null)
+    setLinkCopied(false)
     finishedRef.current = false
     clearInterval(timerRef.current)
   }
@@ -428,9 +469,38 @@ export default function Battle() {
               exit={{ opacity: 0 }}
               className="battle-waiting"
             >
+              {challengeTarget && (
+                <div className="battle-challenge-target">
+                  challenging <span style={{ color: '#00FF41', fontWeight: 700 }}>{challengeTarget}</span>
+                </div>
+              )}
               <div className="battle-room-code-label">room code</div>
               <div className="battle-room-code">{roomCode}</div>
-              <div className="battle-waiting-sub">share this code with your opponent</div>
+
+              {/* Shareable link */}
+              <div className="battle-share-section">
+                <div className="battle-waiting-sub">send this link to your opponent</div>
+                <div className="battle-share-link-row">
+                  <input
+                    readOnly
+                    value={`${window.location.origin}/battle?room=${roomCode}`}
+                    className="battle-share-input"
+                    onClick={e => e.target.select()}
+                  />
+                  <button
+                    className="battle-copy-btn"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/battle?room=${roomCode}`)
+                      setLinkCopied(true)
+                      setTimeout(() => setLinkCopied(false), 2000)
+                    }}
+                  >
+                    {linkCopied ? '✓ copied' : 'copy'}
+                  </button>
+                </div>
+                <div className="battle-share-or">or share the code: <strong>{roomCode}</strong></div>
+              </div>
+
               <div className="battle-pulse-ring" />
               <div className="battle-waiting-text">waiting for opponent...</div>
               <button onClick={resetBattle} className="battle-cancel-btn">cancel</button>
