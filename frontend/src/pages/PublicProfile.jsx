@@ -216,7 +216,7 @@ export default function PublicProfile() {
           ⚔ challenge {displayName}
         </Link>
         <div className="pub-challenge-hint">
-          creates a battle room · share the link with them to play
+          creates a room — copy the link and send it to them to battle
         </div>
       </div>
     </motion.div>

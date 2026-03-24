@@ -471,7 +471,8 @@ export default function Battle() {
             >
               {challengeTarget && (
                 <div className="battle-challenge-target">
-                  challenging <span style={{ color: '#00FF41', fontWeight: 700 }}>{challengeTarget}</span>
+                  challenge room for <span style={{ color: '#00FF41', fontWeight: 700 }}>{challengeTarget}</span>
+                  <div style={{ fontSize: 11, color: 'rgba(0,204,53,0.25)', marginTop: 4 }}>copy the link below and send it to them</div>
                 </div>
               )}
               <div className="battle-room-code-label">room code</div>
