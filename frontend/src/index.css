@@ -195,6 +195,396 @@ button:hover {
 .lb-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,255,65,0.3); }
 
 /* ═══════════════════════════════════════════════════════════
+   SHARED PAGE ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* Page wrapper — subtle radial glow background */
+.page-wrap {
+  position: relative;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 1.25rem 6rem;
+}
+
+.page-wrap::before {
+  content: '';
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  width: 800px;
+  height: 600px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse, rgba(0,255,65,0.025) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-wrap > * { position: relative; z-index: 1; }
+
+/* Page header — terminal prompt style */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.68rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(0,204,53,0.32);
+  margin-bottom: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.page-header-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(0,255,65,0.4);
+  box-shadow: 0 0 6px rgba(0,255,65,0.3);
+  animation: auth-pulse-dot 3s ease-in-out infinite;
+}
+
+.page-header h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  color: #00FF41;
+  text-shadow: 0 0 20px rgba(0,255,65,0.55), 0 0 40px rgba(0,255,65,0.15);
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+
+.page-header-divider {
+  margin-top: 0.75rem;
+  height: 1px;
+  width: 48px;
+  background: linear-gradient(90deg, rgba(0,255,65,0.3), transparent);
+}
+
+/* Enhanced card wrapper */
+.page-card {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(0,88,0,0.18);
+  background: rgba(0,5,0,0.5);
+  box-shadow: 0 0 40px rgba(0,0,0,0.3), 0 0 1px rgba(0,255,65,0.05);
+}
+
+.page-card-header {
+  display: grid;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(0,60,0,0.22);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: rgba(0,204,53,0.22);
+  text-transform: uppercase;
+}
+
+/* Enhanced table row hover */
+.page-table-row {
+  transition: background 0.15s, border-color 0.15s;
+  border-left: 2px solid transparent;
+}
+
+.page-table-row:hover {
+  background: rgba(0,255,65,0.02);
+  border-left-color: rgba(0,255,65,0.2);
+}
+
+/* Empty state */
+.page-empty {
+  text-align: center;
+  padding: 4rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: rgba(0,204,53,0.22);
+  letter-spacing: 0.2em;
+}
+
+/* Section label */
+.page-section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  color: rgba(0,204,53,0.22);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+/* Filter pills */
+.page-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px 5px 7px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(0,88,0,0.2);
+  color: rgba(0,204,53,0.42);
+  background: rgba(0,5,0,0.5);
+  transition: all 0.14s;
+  cursor: pointer;
+}
+
+.page-pill:hover {
+  color: rgba(0,255,65,0.65);
+  border-color: rgba(0,255,65,0.18);
+}
+
+.page-pill-active {
+  color: #00FF41 !important;
+  border-color: rgba(0,255,65,0.24);
+  background: rgba(0,255,65,0.08);
+  text-shadow: 0 0 8px rgba(0,255,65,0.45);
+  box-shadow: 0 0 12px rgba(0,255,65,0.07);
+}
+
+/* Stat strip — enhanced version */
+.page-stat-strip {
+  display: flex;
+  gap: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(0,90,0,0.22);
+  background: rgba(0,5,0,0.55);
+  margin-bottom: 1.75rem;
+  box-shadow: 0 0 30px rgba(0,0,0,0.2);
+}
+
+.page-stat-strip > div {
+  flex: 1;
+  padding: 12px 16px;
+  text-align: center;
+  border-right: 1px solid rgba(0,70,0,0.25);
+}
+
+.page-stat-strip > div:last-child {
+  border-right: none;
+}
+
+/* Badge chip */
+.page-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: rgba(0,80,0,0.45);
+  color: rgba(0,204,53,0.5);
+}
+
+.page-badge-active {
+  background: rgba(0,255,65,0.17);
+  color: #00FF41;
+}
+
+/* Scan line (reusable) */
+.page-scanline {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,65,0.12), transparent);
+  animation: auth-scan 6s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* History table specific */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table thead tr {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(0,204,53,0.22);
+}
+
+.history-table thead th {
+  padding: 12px 16px 12px 0;
+  font-weight: 400;
+  text-align: left;
+  border-bottom: 1px solid rgba(0,60,0,0.22);
+}
+
+.history-table thead th:last-child {
+  text-align: right;
+  padding-right: 0;
+}
+
+.history-table tbody tr {
+  transition: background 0.15s, border-color 0.15s;
+  border-left: 2px solid transparent;
+  border-bottom: 1px solid rgba(0,40,0,0.25);
+}
+
+.history-table tbody tr:hover {
+  background: rgba(0,255,65,0.02);
+  border-left-color: rgba(0,255,65,0.2);
+}
+
+.history-table tbody td {
+  padding: 12px 16px 12px 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.history-table tbody td:last-child {
+  text-align: right;
+  padding-right: 0;
+}
+
+/* Train page */
+.train-container {
+  width: 100%;
+  max-width: 48rem;
+}
+
+.train-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,88,0,0.18);
+  background: rgba(0,5,0,0.5);
+  margin-bottom: 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: rgba(0,204,53,0.4);
+}
+
+.train-status-bar .value {
+  color: #00FF41;
+  text-shadow: 0 0 8px rgba(0,255,65,0.4);
+  font-weight: 600;
+}
+
+.train-metrics-strip {
+  display: flex;
+  gap: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0,90,0,0.22);
+  background: rgba(0,5,0,0.55);
+  margin-bottom: 1.5rem;
+}
+
+.train-metrics-strip > div {
+  flex: 1;
+  padding: 12px 14px;
+  text-align: center;
+  border-right: 1px solid rgba(0,70,0,0.25);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.train-metrics-strip > div:last-child {
+  border-right: none;
+}
+
+.train-code-area {
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid rgba(0,88,0,0.18);
+  background: rgba(0,5,0,0.5);
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.train-code-area pre {
+  color: #00FF41;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* Result panel enhancements */
+.result-panel {
+  position: relative;
+}
+.result-panel::after {
+  content: '';
+  position: absolute;
+  inset: -40px -60px;
+  background: radial-gradient(ellipse at 20% 30%, rgba(0,255,65,0.04) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.result-hero-wpm {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 5rem;
+  font-weight: 700;
+  color: #00FF41;
+  text-shadow:
+    0 0 30px rgba(0,255,65,0.5),
+    0 0 60px rgba(0,255,65,0.2),
+    0 0 100px rgba(0,255,65,0.08);
+  line-height: 1;
+}
+
+.result-hero-acc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #00FF41;
+  text-shadow: 0 0 20px rgba(0,255,65,0.4);
+  line-height: 1;
+}
+
+.result-secondary-strip {
+  display: flex;
+  gap: 2.5rem;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid rgba(0,85,0,0.22);
+}
+
+.result-secondary-strip > div {
+  text-align: left;
+}
+
+.result-secondary-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: rgba(0,204,53,0.28);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.result-secondary-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+  color: rgba(0,204,53,0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .page-wrap { padding: 1.5rem 1rem 4rem; }
+  .page-header h1 { font-size: 1.3rem; }
+  .result-secondary-strip { gap: 1.25rem; flex-wrap: wrap; }
+  .result-secondary-value { font-size: 1.1rem; }
+  .train-status-bar { gap: 1rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════
    AUTH PAGES — LOGIN & SIGNUP
    ═══════════════════════════════════════════════════════════ */
 

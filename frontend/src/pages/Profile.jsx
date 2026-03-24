@@ -530,16 +530,18 @@ export default function Profile() {
   })
 
   return (
-    <div style={{ minHeight:'calc(100vh - 53px)', display:'flex', flexDirection:'column', alignItems:'center', padding:'52px 20px 96px', fontFamily:FONT }}>
+    <div className="page-wrap" style={{ fontFamily:FONT }}>
       <div style={{ width:'100%', maxWidth:740 }}>
 
         {/* breadcrumb + title */}
-        <div style={{ fontFamily:FONT, fontSize:9, letterSpacing:'0.3em', color:'rgba(0,204,53,0.28)', textTransform:'uppercase', marginBottom:6 }}>
-          &gt;&nbsp;profile
+        <div className="page-header">
+          <div className="page-header-prompt">
+            <span className="page-header-dot" />
+            <span>&gt; profile</span>
+          </div>
+          <h1>{displayName}</h1>
+          <div className="page-header-divider" />
         </div>
-        <h1 style={{ fontFamily:FONT, fontSize:24, fontWeight:700, color:'#00FF41', textShadow:'0 0 20px rgba(0,255,65,0.5)', letterSpacing:'0.04em', marginBottom:24, lineHeight:1 }}>
-          {displayName}
-        </h1>
 
         {/* ══ HERO CARD ══════════════════════════════════════ */}
         <div style={card}>

@@ -214,7 +214,7 @@ export default function MyStats() {
 
   return (
     <motion.div
-      className="min-h-[calc(100vh-53px)] flex flex-col items-center px-5 pt-10 pb-24"
+      className="page-wrap"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
@@ -222,21 +222,13 @@ export default function MyStats() {
       <div style={{ width: '100%', maxWidth: 640 }}>
 
         {/* header */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{
-            fontFamily: FONT, fontSize: 11, letterSpacing: '0.34em',
-            color: 'rgba(0,204,53,0.32)', textTransform: 'uppercase', marginBottom: 6,
-          }}>
-            &gt;&nbsp; my stats
+        <div className="page-header">
+          <div className="page-header-prompt">
+            <span className="page-header-dot" />
+            <span>&gt; my stats</span>
           </div>
-          <h1 style={{
-            fontFamily: FONT, fontSize: 22, fontWeight: 700, margin: 0,
-            color: '#00FF41',
-            textShadow: '0 0 20px rgba(0,255,65,0.55), 0 0 40px rgba(0,255,65,0.2)',
-            letterSpacing: '0.03em', lineHeight: 1,
-          }}>
-            {displayName ?? 'your stats'}
-          </h1>
+          <h1>{displayName ?? 'your stats'}</h1>
+          <div className="page-header-divider" />
         </div>
 
         {/* loading */}

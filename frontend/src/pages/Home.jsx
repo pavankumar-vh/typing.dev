@@ -896,6 +896,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="result-panel"
             >
               {/* lang · duration badge */}
               <p className="text-muted text-xs tracking-widest mb-8 opacity-60">
@@ -908,13 +909,11 @@ export default function Home() {
                 {/* Left: primary stats */}
                 <div style={{ minWidth: 140, flexShrink: 0 }}>
                   <p className="text-muted text-xs tracking-widest mb-1 opacity-60">wpm</p>
-                  <p className="glow-text text-text tabular-nums leading-none mb-5"
-                    style={{ fontSize: '5rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
+                  <p className="result-hero-wpm tabular-nums leading-none mb-5">
                     {wpm}
                   </p>
                   <p className="text-muted text-xs tracking-widest mb-1 opacity-60">acc</p>
-                  <p className="glow-text text-text tabular-nums leading-none"
-                    style={{ fontSize: '3.5rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
+                  <p className="result-hero-acc tabular-nums leading-none">
                     {accuracy}%
                   </p>
                 </div>
@@ -926,10 +925,7 @@ export default function Home() {
               </div>
 
               {/* ── Secondary stats strip ── */}
-              <div
-                className="flex gap-10 mt-6 pt-6"
-                style={{ borderTop: '1px solid rgba(0,85,0,0.3)' }}
-              >
+              <div className="result-secondary-strip">
                 {[
                   { label: 'raw',         value: rawWpm },
                   { label: 'characters', value: `${correctTyped}/${typed.length - correctTyped}/0/0` },
