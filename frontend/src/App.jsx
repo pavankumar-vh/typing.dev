@@ -1,5 +1,6 @@
-import { useState, lazy, Suspense } from 'react'
+import { useState, lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 const Landing = lazy(() => import('./pages/Landing.jsx'))
 import Home from './pages/Home.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
@@ -15,10 +16,10 @@ import { ConfigProvider } from './context/ConfigContext.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 
 const NAV = [
-  { to: '/test',        label: 'test',       end: true },
-  { to: '/leaderboard', label: 'leaderboard' },
-  { to: '/stats',       label: 'stats'       },
-  { to: '/my-stats',    label: 'my stats'    },
+  { to: '/test',        label: 'test',       icon: '▸',  end: true },
+  { to: '/leaderboard', label: 'leaderboard', icon: '◆' },
+  { to: '/stats',       label: 'stats',       icon: '◈' },
+  { to: '/my-stats',    label: 'my stats',    icon: '●' },
 ]
 
 function Avatar() {
@@ -67,86 +68,60 @@ function AppShell({ booted, setBooted }) {
         className="crt-screen"
         style={{ opacity: (booted || isLanding) ? 1 : 0, transition: 'opacity 0.5s ease 0.2s' }}
       >
-        {/* ── Header (hidden on landing page) ── */}
-        {!isLanding && <header
-          className="px-8 py-4 flex items-center justify-between"
-          style={{
-            borderBottom: '1px solid rgba(0,255,65,0.1)',
-            background: 'rgba(0,8,0,0.7)',
-            backdropFilter: 'blur(8px)',
-          }}
+        {/* ── Header ── */}
+        {!isLanding && <motion.header
+          initial={{ y: -60, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="nav-header"
         >
+          {/* Glow line at top */}
+          <div className="nav-top-glow" />
+
           {/* Left — logo */}
-          <NavLink
-            to="/"
-            className="flex items-center gap-2 select-none font-bold w-fit"
-            style={{ textDecoration: 'none', color: '#00FF41', textShadow: '0 0 12px rgba(0,255,65,0.7)', letterSpacing: '0.2em', fontSize: '0.9rem' }}
-          >
-            <span style={{ opacity: 0.7 }}>&gt;_</span>
-            typing.dev
+          <NavLink to="/" className="nav-logo">
+            <span className="nav-logo-bracket">&gt;_</span>
+            <span className="nav-logo-text">typing.dev</span>
           </NavLink>
 
           {/* Center — pill nav */}
-          <div
-            className="flex items-center gap-1 px-2 py-1.5 rounded-2xl"
-            style={{
-              background: 'rgba(0,14,0,0.9)',
-              border: '1px solid rgba(0,100,0,0.35)',
-              boxShadow: '0 2px 16px rgba(0,0,0,0.4)',
-            }}
-          >
-            {NAV.map(({ to, label, end }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                className="select-none"
-                style={({ isActive }) => ({
-                  display: 'block',
-                  padding: '6px 16px',
-                  borderRadius: '12px',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.12em',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  textDecoration: 'none',
-                  transition: 'all 0.15s ease',
-                  color:      isActive ? '#00FF41' : 'rgba(0,204,53,0.5)',
-                  background: isActive ? 'rgba(0,255,65,0.1)' : 'transparent',
-                  textShadow: isActive ? '0 0 10px rgba(0,255,65,0.7)' : 'none',
-                  boxShadow:  isActive ? 'inset 0 0 0 1px rgba(0,255,65,0.18)' : 'none',
-                })}
-              >
-                {label}
+          <nav className="nav-pill-container">
+            {NAV.map(({ to, label, icon, end }) => (
+              <NavLink key={to} to={to} end={end} className="nav-pill-link">
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-active-bg"
+                        className="nav-active-indicator"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className={`nav-pill-inner ${isActive ? 'nav-pill-active' : 'nav-pill-inactive'}`}>
+                      <span className="nav-pill-icon">{icon}</span>
+                      {label}
+                    </span>
+                  </>
+                )}
               </NavLink>
             ))}
-          </div>
+          </nav>
 
           {/* Right — auth */}
-          <div className="flex items-center gap-3">
+          <div className="nav-auth-section">
             {!user ? (
-              <NavLink
-                to="/login"
-                style={({ isActive }) => ({
-                  padding: '6px 18px',
-                  borderRadius: '12px',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.12em',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  textDecoration: 'none',
-                  border: '1px solid rgba(0,255,65,0.25)',
-                  color:      isActive ? '#00FF41' : 'rgba(0,204,53,0.6)',
-                  background: isActive ? 'rgba(0,255,65,0.08)' : 'transparent',
-                  textShadow: isActive ? '0 0 10px rgba(0,255,65,0.7)' : 'none',
-                  transition: 'all 0.15s',
-                })}
-              >
-                login
+              <NavLink to="/login" className="nav-login-btn">
+                {({ isActive }) => (
+                  <span className={isActive ? 'nav-login-active' : ''}>
+                    login
+                  </span>
+                )}
               </NavLink>
             ) : (
               <Avatar />
             )}
           </div>
-        </header>}
+        </motion.header>}
 
         <Routes>
           <Route path="/"            element={<Suspense fallback={<div className="min-h-screen bg-bg" />}><Landing /></Suspense>} />
