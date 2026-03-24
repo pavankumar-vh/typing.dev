@@ -7,7 +7,10 @@ import Leaderboard from './pages/Leaderboard.jsx'
 import Stats from './pages/Stats.jsx'
 import History from './pages/History.jsx'
 import Profile from './pages/Profile.jsx'
+import PublicProfile from './pages/PublicProfile.jsx'
 import MyStats from './pages/MyStats.jsx'
+import Players from './pages/Players.jsx'
+import Battle from './pages/Battle.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import BootScreen from './components/BootScreen.jsx'
@@ -17,9 +20,10 @@ import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 
 const NAV = [
   { to: '/test',        label: 'test',       icon: '▸',  end: true },
+  { to: '/battle',      label: 'battle',     icon: '⚔' },
   { to: '/leaderboard', label: 'leaderboard', icon: '◆' },
+  { to: '/players',     label: 'players',    icon: '◉' },
   { to: '/stats',       label: 'stats',       icon: '◈' },
-  { to: '/my-stats',    label: 'my stats',    icon: '●' },
 ]
 
 function Avatar() {
@@ -131,6 +135,9 @@ function AppShell({ booted, setBooted }) {
           <Route path="/my-stats"    element={<MyStats />} />
           <Route path="/history"     element={<History />} />
           <Route path="/profile"     element={<Profile />} />
+          <Route path="/profile/:userId" element={<PublicProfile />} />
+          <Route path="/players"     element={<Players />} />
+          <Route path="/battle"      element={<Battle />} />
           <Route path="/login"       element={user ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/signup"      element={user ? <Navigate to="/" replace /> : <Signup />} />
         </Routes>

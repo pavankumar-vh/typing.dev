@@ -216,3 +216,111 @@ export async function getSessionById(req, res, next) {
   }
 }
 
+// ── GET /api/sessions/users/search ──────────────────────
+// Search users by display name (prefix match, case-insensitive)
+export async function searchUsers(req, res, next) {
+  try {
+    const { q = '', limit = 20 } = req.query
+    const trimmed = q.trim()
+    if (!trimmed) return res.json({ success: true, data: [] })
+
+    // Escape regex specials so user input is treated as a literal prefix
+    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+    const data = await Session.aggregate([
+      { $match: { userId: { $ne: null }, displayName: { $regex: escaped, $options: 'i' } } },
+      { $sort: { wpm: -1 } },
+      {
+        $group: {
+          _id: '$userId',
+          displayName:   { $first: '$displayName' },
+          userId:        { $first: '$userId' },
+          topWpm:        { $max: '$wpm' },
+          avgWpm:        { $avg: '$wpm' },
+          avgAccuracy:   { $avg: '$accuracy' },
+          totalSessions: { $sum: 1 },
+          topLanguage:   { $first: '$language' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          userId: 1, displayName: 1,
+          topWpm: 1,
+          avgWpm:      { $round: ['$avgWpm', 1] },
+          avgAccuracy: { $round: ['$avgAccuracy', 1] },
+          totalSessions: 1, topLanguage: 1,
+        },
+      },
+      { $sort: { topWpm: -1 } },
+      { $limit: Math.min(Number(limit) || 20, 50) },
+    ])
+
+    res.json({ success: true, data })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── GET /api/sessions/users/:userId ─────────────────────
+// Public profile data for any user
+export async function getUserProfile(req, res, next) {
+  try {
+    const { userId } = req.params
+
+    const [statsRes, sessions] = await Promise.all([
+      Session.aggregate([
+        { $match: { userId } },
+        {
+          $group: {
+            _id: '$language',
+            totalSessions: { $sum: 1 },
+            avgWpm:     { $avg: '$wpm' },
+            avgAccuracy:{ $avg: '$accuracy' },
+            topWpm:     { $max: '$wpm' },
+          },
+        },
+        {
+          $project: {
+            language: '$_id', _id: 0,
+            totalSessions: 1,
+            avgWpm:      { $round: ['$avgWpm', 1] },
+            avgAccuracy: { $round: ['$avgAccuracy', 1] },
+            topWpm: 1,
+          },
+        },
+        { $sort: { avgWpm: -1 } },
+      ]),
+      Session.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(2000)
+        .lean(),
+    ])
+
+    if (!sessions.length) {
+      return res.status(404).json({ success: false, error: 'User not found' })
+    }
+
+    const displayName = sessions[0]?.displayName || 'anonymous'
+    const globalStats = {
+      totalSessions: sessions.length,
+      avgWpm:      Math.round(sessions.reduce((a, s) => a + s.wpm, 0) / sessions.length * 10) / 10,
+      avgAccuracy: Math.round(sessions.reduce((a, s) => a + s.accuracy, 0) / sessions.length * 10) / 10,
+      topWpm:      Math.max(...sessions.map(s => s.wpm)),
+    }
+
+    res.json({
+      success: true,
+      data: {
+        userId,
+        displayName,
+        global: globalStats,
+        byLanguage: statsRes,
+        sessions,
+      },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+

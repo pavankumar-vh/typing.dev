@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useConfig, LANGUAGES, DURATIONS } from '../context/ConfigContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
