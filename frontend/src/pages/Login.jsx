@@ -1,20 +1,67 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext.jsx'
 
-function Field({ label, type, value, onChange, placeholder, autoFocus, autoComplete }) {
+/* ── Matrix rain background ── */
+function MatrixRain() {
+  const canvasRef = useRef(null)
+  useEffect(() => {
+    const cvs = canvasRef.current
+    if (!cvs) return
+    const ctx = cvs.getContext('2d')
+    let raf
+    const chars = 'ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ01'.split('')
+    const fontSize = 14
+    let columns, drops
+
+    function resize() {
+      cvs.width = cvs.offsetWidth * devicePixelRatio
+      cvs.height = cvs.offsetHeight * devicePixelRatio
+      ctx.scale(devicePixelRatio, devicePixelRatio)
+      columns = Math.floor(cvs.offsetWidth / fontSize)
+      drops = Array.from({ length: columns }, () => Math.random() * -100)
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    function draw() {
+      ctx.fillStyle = 'rgba(0,2,0,0.12)'
+      ctx.fillRect(0, 0, cvs.offsetWidth, cvs.offsetHeight)
+      ctx.fillStyle = 'rgba(0,255,65,0.12)'
+      ctx.font = `${fontSize}px monospace`
+      for (let i = 0; i < columns; i++) {
+        const ch = chars[Math.floor(Math.random() * chars.length)]
+        ctx.fillText(ch, i * fontSize, drops[i] * fontSize)
+        if (drops[i] * fontSize > cvs.offsetHeight && Math.random() > 0.975) drops[i] = 0
+        drops[i]++
+      }
+      raf = requestAnimationFrame(draw)
+    }
+    draw()
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
+  }, [])
+  return <canvas ref={canvasRef} className="auth-matrix-canvas" />
+}
+
+/* ── Animated input field ── */
+function Field({ label, type, value, onChange, placeholder, autoFocus, autoComplete, index = 0 }) {
   const [focused, setFocused] = useState(false)
   const filled = value.length > 0
   return (
-    <div className="flex flex-col gap-3">
-      <label
-        className="text-xs tracking-[0.3em] uppercase font-medium transition-colors duration-200"
-        style={{ color: focused ? '#00FF41' : filled ? 'rgba(0,255,65,0.55)' : 'rgba(0,255,65,0.35)' }}
-      >
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.3 + index * 0.12, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="auth-field"
+    >
+      <label className="auth-field-label" style={{
+        color: focused ? '#00FF41' : filled ? 'rgba(0,255,65,0.55)' : 'rgba(0,255,65,0.35)',
+      }}>
+        <span className="auth-field-prompt" style={{ opacity: focused ? 1 : 0.3 }}>❯</span>
         {label}
       </label>
-      <div className="relative">
+      <div className="auth-field-input-wrap">
         <input
           type={type}
           autoComplete={autoComplete}
@@ -24,31 +71,82 @@ function Field({ label, type, value, onChange, placeholder, autoFocus, autoCompl
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholder={placeholder}
-          className="bg-transparent text-text tracking-wide outline-none w-full text-base transition-all duration-200 placeholder:text-muted placeholder:opacity-15"
-          style={{
-            padding: '0.875rem 1.5rem 0.875rem 0',
-            borderBottom: `1px solid ${focused ? '#00FF41' : 'rgba(0,255,65,0.18)'}`,
-            boxShadow: focused ? '0 2px 0 -1px rgba(0,255,65,0.2)' : 'none',
-            caretColor: '#00FF41',
-          }}
+          className="auth-field-input"
         />
+        <div className="auth-field-line" style={{
+          transform: focused ? 'scaleX(1)' : 'scaleX(0)',
+          opacity: focused ? 1 : 0,
+        }} />
+        <div className="auth-field-line-bg" />
         {focused && (
-          <span className="absolute right-0 bottom-4 w-1.5 h-1.5 rounded-full"
-            style={{ background: '#00FF41', boxShadow: '0 0 8px rgba(0,255,65,0.9)' }} />
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="auth-field-dot"
+          />
         )}
       </div>
+    </motion.div>
+  )
+}
+
+/* ── Typing subtitle ── */
+function TypeWriter({ text, delay = 0 }) {
+  const [displayed, setDisplayed] = useState('')
+  useEffect(() => {
+    let i = 0
+    const timeout = setTimeout(() => {
+      const iv = setInterval(() => {
+        i++
+        setDisplayed(text.slice(0, i))
+        if (i >= text.length) clearInterval(iv)
+      }, 45)
+      return () => clearInterval(iv)
+    }, delay)
+    return () => clearTimeout(timeout)
+  }, [text, delay])
+  return (
+    <span className="auth-typewriter">
+      {displayed}
+      <span className="auth-cursor">▊</span>
+    </span>
+  )
+}
+
+/* ── Floating particles ── */
+const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+  size: 1 + Math.random() * 2,
+  dur: 8 + Math.random() * 12,
+  delay: Math.random() * 5,
+}))
+
+function Particles() {
+  return (
+    <div className="auth-particles">
+      {PARTICLES.map(p => (
+        <motion.div
+          key={p.id}
+          className="auth-particle"
+          style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size }}
+          animate={{ y: [0, -30, 0], opacity: [0, 0.6, 0] }}
+          transition={{ duration: p.dur, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }}
+        />
+      ))}
     </div>
   )
 }
 
 export default function Login() {
   const { login } = useAuth()
-  const navigate   = useNavigate()
-  const [email, setEmail]       = useState('')
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [dots, setDots]         = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [dots, setDots] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -75,123 +173,150 @@ export default function Login() {
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
-      style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(0,255,65,0.04) 0%, transparent 65%)' }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="w-full"
-        style={{ maxWidth: '520px' }}
-      >
+    <div className="auth-page">
+      <MatrixRain />
+      <Particles />
 
+      {/* Radial glow */}
+      <div className="auth-glow" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="auth-container"
+      >
         {/* Window chrome */}
-        <div className="flex items-center gap-3 mb-8 px-1">
-          <div className="flex gap-2">
-            <span className="w-3 h-3 rounded-full" style={{ background: '#FF5F57', boxShadow: '0 0 6px rgba(255,95,87,0.5)' }} />
-            <span className="w-3 h-3 rounded-full" style={{ background: '#FFBD2E', boxShadow: '0 0 6px rgba(255,189,46,0.4)' }} />
-            <span className="w-3 h-3 rounded-full" style={{ background: '#28CA41', boxShadow: '0 0 6px rgba(40,202,65,0.5)' }} />
+        <motion.div
+          className="auth-chrome"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+        >
+          <div className="auth-chrome-dots">
+            {['#FF5F57', '#FFBD2E', '#28CA41'].map((c, i) => (
+              <motion.span
+                key={c}
+                className="auth-chrome-dot"
+                style={{ background: c, boxShadow: `0 0 6px ${c}66` }}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3 + i * 0.08, type: 'spring', stiffness: 500 }}
+              />
+            ))}
           </div>
-          <span className="text-xs tracking-[0.3em] uppercase" style={{ color: 'rgba(0,255,65,0.25)' }}>
-            typing.dev — /login
-          </span>
-        </div>
+          <span className="auth-chrome-title">typing.dev — /login</span>
+          <div className="auth-chrome-dots" style={{ visibility: 'hidden' }}>
+            <span className="auth-chrome-dot" /><span className="auth-chrome-dot" /><span className="auth-chrome-dot" />
+          </div>
+        </motion.div>
 
         {/* Card */}
-        <div style={{
-          border: '1px solid rgba(0,255,65,0.14)',
-          background: 'linear-gradient(160deg, rgba(0,255,65,0.025) 0%, rgba(0,0,0,0) 100%)',
-          padding: '3.5rem 4rem',
-          boxShadow: '0 0 100px rgba(0,255,65,0.04), 0 1px 0 0 rgba(0,255,65,0.1) inset',
-        }}>
+        <div className="auth-card">
+          {/* Scan line */}
+          <div className="auth-scanline" />
+          {/* Corner decorations */}
+          <div className="auth-corner auth-corner-tl" />
+          <div className="auth-corner auth-corner-tr" />
+          <div className="auth-corner auth-corner-bl" />
+          <div className="auth-corner auth-corner-br" />
 
           {/* Header */}
-          <div className="mb-10">
-            <p className="text-xs tracking-[0.35em] uppercase mb-4" style={{ color: 'rgba(0,255,65,0.3)' }}>
-              system: authenticate
-            </p>
-            <h1 className="text-4xl font-bold tracking-[0.05em]" style={{ color: '#00FF41', textShadow: '0 0 40px rgba(0,255,65,0.35)' }}>
-              &gt;_ login
+          <motion.div
+            className="auth-header"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="auth-status-line">
+              <span className="auth-status-dot" />
+              <span>system: authenticate</span>
+            </div>
+            <h1 className="auth-title">
+              <span className="auth-title-prompt">&gt;_</span> login
             </h1>
-            <div className="mt-4 h-px w-16" style={{ background: 'rgba(0,255,65,0.3)' }} />
-          </div>
+            <div className="auth-subtitle">
+              <TypeWriter text="enter credentials to access your terminal session" delay={600} />
+            </div>
+            <div className="auth-divider" />
+          </motion.div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-9">
-
-            <Field label="email address" type="email" autoFocus autoComplete="email"
+          <form onSubmit={handleSubmit} className="auth-form">
+            <Field label="email address" type="email" autoFocus autoComplete="email" index={0}
               value={email} onChange={e => setEmail(e.target.value)} placeholder="user@domain.com" />
 
-            <Field label="password" type="password" autoComplete="current-password"
+            <Field label="password" type="password" autoComplete="current-password" index={1}
               value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-start gap-3 text-xs tracking-widest py-4 px-4"
-                style={{
-                  background: 'rgba(255,68,68,0.05)',
-                  border: '1px solid rgba(255,68,68,0.15)',
-                  borderLeft: '3px solid rgba(255,68,68,0.55)',
-                  color: '#FF7070',
-                }}
-              >
-                <span className="shrink-0 mt-0.5 opacity-70">!</span>
-                <span>{error}</span>
-              </motion.div>
-            )}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, x: -10 }}
+                  animate={{ opacity: 1, height: 'auto', x: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="auth-error"
+                >
+                  <div className="auth-error-inner">
+                    <span className="auth-error-icon">⚠</span>
+                    <span>{error}</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            <button
+            <motion.button
               type="submit"
               disabled={loading}
-              className="text-sm tracking-[0.3em] py-4 font-bold transition-all duration-200 uppercase disabled:opacity-50 cursor-pointer"
-              style={{
-                background: loading ? 'transparent' : '#00FF41',
-                color: loading ? '#00FF41' : '#000',
-                border: `1px solid ${loading ? 'rgba(0,255,65,0.3)' : '#00FF41'}`,
-                boxShadow: loading ? 'none' : '0 0 40px rgba(0,255,65,0.2), 0 0 0 1px rgba(0,255,65,0.1)',
-                marginTop: '0.5rem',
-              }}
+              className="auth-submit"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55 }}
+              whileHover={!loading ? { scale: 1.01, boxShadow: '0 0 50px rgba(0,255,65,0.3), 0 0 100px rgba(0,255,65,0.1)' } : {}}
+              whileTap={!loading ? { scale: 0.985 } : {}}
             >
-              {loading
-                ? <span className="flex items-center justify-center gap-3">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#00FF41' }} />
-                    {`authenticating${dots}`}
-                  </span>
-                : 'login →'
-              }
-            </button>
-
+              {loading ? (
+                <span className="auth-submit-loading">
+                  <span className="auth-submit-pulse" />
+                  {`authenticating${dots}`}
+                </span>
+              ) : (
+                <span className="auth-submit-text">
+                  login<span className="auth-submit-arrow">→</span>
+                </span>
+              )}
+            </motion.button>
           </form>
 
           {/* Footer */}
-          <div className="mt-10 pt-7 flex items-center justify-between" style={{ borderTop: '1px solid rgba(0,255,65,0.07)' }}>
-            <span className="text-xs tracking-widest" style={{ color: 'rgba(0,255,65,0.28)' }}>
-              no account yet?
-            </span>
-            <div className="flex items-center gap-6">
-              <Link to="/signup"
-                className="text-xs tracking-[0.2em] font-medium transition-opacity duration-150 hover:opacity-70"
-                style={{ color: '#00FF41', textShadow: '0 0 12px rgba(0,255,65,0.3)' }}>
-                create account →
+          <motion.div
+            className="auth-footer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.65 }}
+          >
+            <span className="auth-footer-label">no account yet?</span>
+            <div className="auth-footer-links">
+              <Link to="/signup" className="auth-footer-link auth-footer-link-primary">
+                create account <span>→</span>
               </Link>
-              <Link to="/"
-                className="text-xs tracking-[0.2em] transition-opacity duration-150 hover:opacity-70"
-                style={{ color: 'rgba(0,255,65,0.35)' }}>
+              <Link to="/" className="auth-footer-link auth-footer-link-skip">
                 &gt; skip
               </Link>
             </div>
-          </div>
-
+          </motion.div>
         </div>
 
-        <p className="text-center mt-5 text-xs" style={{ color: 'rgba(0,255,65,0.12)', letterSpacing: '0.2em' }}>
+        {/* Bottom badge */}
+        <motion.p
+          className="auth-badge"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+        >
+          <span className="auth-badge-dot" />
           secured · firebase auth
-        </p>
-
+        </motion.p>
       </motion.div>
     </div>
   )
