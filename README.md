@@ -50,15 +50,22 @@ Compete in real-time 1v1 battles. Track your improvement. Let AI keep your drill
       <strong>Profile</strong><br>
       <sub>GitHub-style activity heatmap, per-language stats, customizable colors</sub>
     </td>
-    <td align="center">
-      <img src="docs/screenshots/players.png" alt="Players" /><br>
-      <strong>Player Discovery</strong><br>
-      <sub>Search players, view public profiles, send battle challenges</sub>
-    </td>
   </tr>
 </table>
 
-> **Add your own screenshots:** drop `.png` files into `docs/screenshots/` with the names above.
+---
+
+## Demo
+
+<div align="center">
+
+<!-- Replace the link below with your demo video URL (YouTube, Loom, etc.) -->
+
+[![Watch the demo](docs/screenshots/hero.png)](https://youtube.com/watch?v=YOUR_VIDEO_ID)
+
+*Click the image above to watch the full demo video*
+
+</div>
 
 ---
 
