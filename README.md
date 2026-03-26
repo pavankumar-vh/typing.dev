@@ -1,75 +1,113 @@
-# typing.dev
+<div align="center">
 
-> A terminal-style code typing trainer built for developers — not typists.
+# ⌨ typing.dev
 
-Practice typing real, syntax-accurate code snippets in Java, Python, and JavaScript. Track your improvement over time, compete on the global leaderboard, and let AI keep your drills fresh.
+### A terminal-themed typing trainer built for developers — not typists.
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/placeholder/deploy-status)](https://typingdotdev.netlify.app)
+Practice typing real code in **JavaScript · TypeScript · Python · Java · Go · Rust · C++**.<br>
+Compete in real-time 1v1 battles. Track your improvement. Let AI keep your drills fresh.
 
-**Live → [typingdotdev.netlify.app](https://typingdotdev.netlify.app)**
+**[Live Demo →](https://typingdotdev.netlify.app)**
 
----
+<br>
 
-## Table of Contents
+![CRT terminal aesthetic](docs/screenshots/hero.png)
 
-- [Demo](#demo)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Local Development](#local-development)
-- [Environment Variables](#environment-variables)
-- [API Reference](#api-reference)
-- [Deployment](#deployment)
+</div>
 
 ---
 
-## Demo
+## Screenshots
 
-| Screen | Description |
-|--------|-------------|
-| **Train** | Real-time typing test with live WPM, accuracy, and error highlighting |
-| **Leaderboard** | Global top scores ranked by WPM, filterable by language and duration |
-| **My Stats** | Personal performance over time with charts and session history |
-| **Profile** | Activity heatmap, best scores, and account settings |
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/typing-test.png" alt="Typing Test" /><br>
+      <strong>Typing Test</strong><br>
+      <sub>Live WPM, accuracy, error highlighting, smooth WPM chart</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/battle-active.png" alt="1v1 Battle" /><br>
+      <strong>1v1 Battle Arena</strong><br>
+      <sub>Real-time PvP with progress bars, timer, and live opponent stats</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/battle-results.png" alt="Battle Results" /><br>
+      <strong>Battle Results</strong><br>
+      <sub>Score breakdown with rank (D→S+), WPM comparison, quick rematch</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/leaderboard.png" alt="Leaderboard" /><br>
+      <strong>Leaderboard</strong><br>
+      <sub>Global rankings with podium, filterable by language</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/profile.png" alt="Profile" /><br>
+      <strong>Profile</strong><br>
+      <sub>GitHub-style activity heatmap, per-language stats, customizable colors</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/players.png" alt="Players" /><br>
+      <strong>Player Discovery</strong><br>
+      <sub>Search players, view public profiles, send battle challenges</sub>
+    </td>
+  </tr>
+</table>
+
+> **Add your own screenshots:** drop `.png` files into `docs/screenshots/` with the names above.
 
 ---
 
 ## Features
 
-### Core Typing Engine
-- Character-by-character input validation with instant visual feedback
-- Tracks **WPM**, **raw WPM**, **accuracy**, and **error count** live
-- **Tab** → new test with a different snippet &nbsp;|&nbsp; **Esc** → restart with the same snippet
-- Countdown timer modes: **15s · 30s · 60s · 120s**
-- Language selection: **Java · Python · JavaScript**
+### Typing Engine
+- Character-by-character validation with instant visual feedback
+- Live **WPM**, **raw WPM**, **accuracy**, and **error count**
+- Smooth Catmull-Rom WPM chart rendered in real time
+- **Tab** → new snippet &nbsp;|&nbsp; **Esc** → restart same snippet
+- Timer modes: **15s · 30s · 60s · 120s**
+- Difficulty levels: **easy · medium · hard**
+- 7 languages: **JavaScript · TypeScript · Python · Java · Go · Rust · C++**
+
+### 1v1 Battle Arena
+- **Quick match** — finds an opponent or spawns a bot after 6s
+- **Private rooms** — create a room code, share a link
+- **Challenge system** — challenge any player from their profile page
+- **In-app notifications** — opponents see a ⚔ bell with pending challenges
+- Real-time progress bars, opponent WPM, and live score tracking
+- Score system with ranks: **D → C → B → A → S → S+**
+- Bot opponents simulate realistic typing at 35–70 WPM
+- 60-second server-authoritative timer
 
 ### AI-Powered Snippets
-- Code snippets generated and rotated via **Google Gemini API**
-- Snippets are realistic, syntax-valid, and language-specific
-- Cached in MongoDB to reduce API calls and ensure variety
+- Code snippets generated via **Google Gemini API**
+- Realistic, syntax-valid, and language-specific
+- Cached in MongoDB — fresh generation on demand
 
 ### Authentication & Profiles
-- **Firebase Authentication** — email/password sign-up and login
-- Display name set at registration, shown on leaderboard
-- Protected routes redirect unauthenticated users to `/login`
+- **Firebase Auth** — email/password sign-up and login
+- Editable display name and color customization
+- **Public profiles** with shareable URLs (`/profile/:userId`)
+- GitHub-style **activity heatmap** on profile pages
 
-### Leaderboard
-- Global rankings sorted by WPM
+### Leaderboard & Stats
+- Global rankings with **podium** display (gold/silver/bronze)
 - Filter by language and test duration
-- Animated entry transitions via **Framer Motion**
-- Shows rank, username, WPM, accuracy, and date
-
-### Stats & History
-- Personal session history with full metrics per run
-- Aggregated stats: average WPM, best WPM, total sessions
-- Activity heatmap (GitHub-style) on profile page
+- Personal analytics dashboard: per-language breakdowns, consistency tracking
+- Full session history with sorting and filtering
 
 ### Design
-- CRT phosphor terminal aesthetic — `#00FF41` on black
-- JetBrains Mono throughout
+- **CRT phosphor terminal aesthetic** — `#00FF41` on black
+- JetBrains Mono monospace font throughout
 - Scanline + vignette + phosphor glow CSS effects
+- Boot screen animation on first load
+- Custom cursor glow effect
 - Fully responsive, dark-only
+- Animated page transitions via **Framer Motion**
 
 ---
 
@@ -84,6 +122,7 @@ Practice typing real, syntax-accurate code snippets in Java, Python, and JavaScr
 | Tailwind CSS | v4 | Utility-first styling |
 | Framer Motion | 12 | Page and element animations |
 | React Router | v7 | Client-side routing |
+| Socket.io Client | 4 | Real-time battle communication |
 | Firebase SDK | 12 | Auth client |
 
 ### Backend
@@ -92,12 +131,11 @@ Practice typing real, syntax-accurate code snippets in Java, Python, and JavaScr
 |------------|---------|---------|
 | Node.js | ≥20 | Runtime |
 | Express | 4 | HTTP server and routing |
+| Socket.io | 4 | WebSocket server for battles |
 | Mongoose | 8 | MongoDB ODM |
 | MongoDB Atlas | — | Hosted database |
 | Firebase Admin SDK | 13 | Server-side token verification |
 | Google Generative AI | 0.24 | Gemini snippet generation |
-| dotenv | 16 | Environment variable loading |
-| cors | 2 | Cross-origin request handling |
 
 ### Infrastructure
 
@@ -106,7 +144,7 @@ Practice typing real, syntax-accurate code snippets in Java, Python, and JavaScr
 | Frontend hosting | [Netlify](https://typingdotdev.netlify.app) |
 | Backend hosting | [Railway](https://typingdev-production.up.railway.app) |
 | Database | MongoDB Atlas |
-| Auth | Firebase (project: `typing-dev`) |
+| Auth | Firebase |
 | AI | Google Gemini API |
 
 ---
@@ -118,18 +156,26 @@ Browser
   │
   ├─ React SPA (Netlify CDN)
   │    ├─ Firebase Auth SDK  ──────────────► Firebase Auth
-  │    └─ REST API calls
-  │         │
-  │         ▼
-  │    Express API (Railway)
-  │         ├─ /api/sessions  ──────────► MongoDB Atlas
-  │         ├─ /api/snippets  ──────────► MongoDB Atlas + Gemini API
-  │         └─ /api/health
+  │    ├─ REST API calls     ──────┐
+  │    └─ Socket.io client   ───┐  │
+  │                             │  │
+  │                             ▼  ▼
+  │                     Express API (Railway)
+  │                          ├─ /api/sessions     ──► MongoDB Atlas
+  │                          ├─ /api/snippets     ──► MongoDB + Gemini API
+  │                          ├─ /api/challenges   ──► MongoDB Atlas
+  │                          └─ /battle (Socket.io namespace)
+  │                               ├─ Quick match queue
+  │                               ├─ Room management
+  │                               ├─ Bot simulation
+  │                               └─ Server-side timer
   │
   └─ Static assets served by Netlify
 ```
 
-Auth flow: Firebase issues a JWT on login → frontend sends it as `Authorization: Bearer <token>` → backend verifies via Firebase Admin SDK → request is processed.
+**Auth flow:** Firebase issues a JWT on login → frontend sends `Authorization: Bearer <token>` → backend verifies via Firebase Admin SDK.
+
+**Battle flow:** Socket.io `/battle` namespace handles matchmaking, countdown, real-time progress sync, and result calculation server-side.
 
 ---
 
@@ -137,27 +183,40 @@ Auth flow: Firebase issues a JWT on login → frontend sends it as `Authorizatio
 
 ```
 typing.dev/
+├── docs/
+│   └── screenshots/            # README images (add your own)
+│
 ├── frontend/
 │   ├── public/
-│   │   └── _redirects          # Netlify SPA routing fix
-│   ├── src/
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx # Firebase auth state provider
-│   │   ├── pages/
-│   │   │   ├── Home.jsx        # Landing / test selection
-│   │   │   ├── Train.jsx       # Core typing test
-│   │   │   ├── Leaderboard.jsx # Global rankings
-│   │   │   ├── Stats.jsx       # Global stats
-│   │   │   ├── MyStats.jsx     # Personal stats
-│   │   │   ├── History.jsx     # Session history
-│   │   │   ├── Profile.jsx     # User profile + heatmap
-│   │   │   ├── Login.jsx       # Auth — login
-│   │   │   └── Signup.jsx      # Auth — registration
-│   │   ├── App.jsx             # Router and layout
-│   │   └── main.jsx            # Entry point
-│   ├── .env.local              # VITE_API_URL + Firebase config
-│   ├── vite.config.js
-│   └── package.json
+│   │   └── _redirects          # Netlify SPA routing
+│   └── src/
+│       ├── components/
+│       │   ├── BootScreen.jsx  # CRT boot animation
+│       │   └── CursorGlow.jsx  # Custom cursor effect
+│       ├── config/
+│       │   └── firebase.js     # Firebase client init
+│       ├── context/
+│       │   ├── AuthContext.jsx  # Firebase auth state
+│       │   └── ConfigContext.jsx # Language/duration prefs
+│       ├── pages/
+│       │   ├── Landing.jsx     # Hero / marketing page
+│       │   ├── Home.jsx        # Main typing test (/test)
+│       │   ├── Battle.jsx      # 1v1 arena (/battle)
+│       │   ├── Leaderboard.jsx # Global rankings
+│       │   ├── Players.jsx     # Player search + discovery
+│       │   ├── Stats.jsx       # Analytics dashboard
+│       │   ├── MyStats.jsx     # Personal breakdown
+│       │   ├── History.jsx     # Session history log
+│       │   ├── Profile.jsx     # Own profile + settings
+│       │   ├── PublicProfile.jsx # Other players' profiles
+│       │   ├── Login.jsx       # Auth — login
+│       │   └── Signup.jsx      # Auth — registration
+│       ├── utils/
+│       │   ├── metrics.js      # WPM + accuracy calc
+│       │   └── snippetApi.js   # Snippet fetch helper
+│       ├── App.jsx             # Router, nav, layout
+│       ├── main.jsx            # Entry point
+│       └── index.css           # Tailwind v4 + CRT tokens
 │
 └── backend/
     ├── src/
@@ -170,13 +229,17 @@ typing.dev/
     │   │   ├── errorHandler.js
     │   │   └── validate.js
     │   ├── models/
-    │   │   └── Session.js      # Mongoose schema
+    │   │   ├── Session.js      # Typing sessions
+    │   │   ├── Battle.js       # Battle rooms + players
+    │   │   └── Challenge.js    # PvP challenge notifications
     │   ├── routes/
-    │   │   ├── sessions.js
-    │   │   └── snippets.js
+    │   │   ├── sessions.js     # /api/sessions
+    │   │   ├── snippets.js     # /api/snippets
+    │   │   └── challenges.js   # /api/challenges
+    │   ├── socket/
+    │   │   └── battleSocket.js # Socket.io battle handler
     │   └── app.js              # Express app setup + CORS
     ├── server.js               # Entry point
-    ├── .env                    # Secrets (not committed)
     └── package.json
 ```
 
@@ -186,10 +249,10 @@ typing.dev/
 
 ### Prerequisites
 
-- Node.js ≥ 20
-- A [MongoDB Atlas](https://www.mongodb.com/atlas) cluster (free tier works)
-- A [Firebase project](https://console.firebase.google.com) with Email/Password auth enabled
-- A [Google AI Studio](https://aistudio.google.com) API key for Gemini
+- **Node.js** ≥ 20
+- **MongoDB Atlas** cluster ([free tier](https://www.mongodb.com/atlas))
+- **Firebase project** with Email/Password auth ([console](https://console.firebase.google.com))
+- **Gemini API key** from [Google AI Studio](https://aistudio.google.com)
 
 ### 1 — Clone
 
@@ -209,7 +272,7 @@ Create `backend/.env` (see [Environment Variables](#environment-variables)), the
 
 ```bash
 node server.js
-# API available at http://localhost:5001
+# API + Socket.io at http://localhost:5001
 ```
 
 ### 3 — Frontend
@@ -223,7 +286,7 @@ Create `frontend/.env.local` (see [Environment Variables](#environment-variables
 
 ```bash
 npm run dev
-# App available at http://localhost:5173
+# App at http://localhost:5173
 ```
 
 ---
@@ -237,12 +300,12 @@ PORT=5001
 MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/typingdev
 GEMINI_API_KEY=your_gemini_api_key
 
-# Firebase Admin SDK service account fields
+# Firebase Admin SDK
 FIREBASE_PROJECT_ID=your_project_id
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-...@project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
-# Comma-separated allowed CORS origins
+# CORS origins (comma-separated)
 FRONTEND_URL=http://localhost:5173,https://typingdotdev.netlify.app
 ```
 
@@ -265,51 +328,54 @@ VITE_FIREBASE_APP_ID=1:000000000000:web:xxxxxxxxxxxxxxxx
 
 Base URL: `https://typingdev-production.up.railway.app`
 
-### Health
-
-```
-GET /api/health
-```
-
-Returns `{ success: true }` — used to confirm the service is running.
-
----
-
 ### Sessions
 
-```
-GET  /api/sessions/leaderboard   # Top scores (public)
-GET  /api/sessions/my            # Authenticated user's sessions
-POST /api/sessions               # Save a completed session (auth required)
-```
-
-**POST /api/sessions** body:
-
-```json
-{
-  "language": "python",
-  "duration": 60,
-  "wpm": 84,
-  "rawWpm": 91,
-  "accuracy": 96.2,
-  "errors": 4
-}
-```
-
-All authenticated endpoints require:
-```
-Authorization: Bearer <firebase_id_token>
-```
-
----
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/sessions/leaderboard` | No | Global top scores by language |
+| `GET` | `/api/sessions/leaderboard/users` | No | User rankings |
+| `GET` | `/api/sessions/my` | Yes | Current user's sessions |
+| `POST` | `/api/sessions` | Yes | Save a completed session |
+| `GET` | `/api/sessions/stats` | No | Aggregate stats |
+| `GET` | `/api/sessions/users/search?q=` | No | Search users by name |
+| `GET` | `/api/sessions/users/:userId` | No | Get user profile |
 
 ### Snippets
 
-```
-GET /api/snippets?language=python   # Fetch a code snippet
-```
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/snippets/languages` | No | List supported languages |
+| `POST` | `/api/snippets/generate` | No | Generate a fresh AI snippet |
 
-Returns a cached or freshly generated snippet for the given language.
+### Challenges
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/challenges` | No | Send a battle challenge |
+| `GET` | `/api/challenges/:userId` | No | Get pending challenges for user |
+| `PATCH` | `/api/challenges/:id` | No | Accept or decline a challenge |
+
+### Battle (Socket.io)
+
+Namespace: `/battle`
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| `battle:create` | Client → Server | Create a private room |
+| `battle:join` | Client → Server | Join an existing room by code |
+| `battle:quick` | Client → Server | Enter quick match queue |
+| `battle:ready` | Client → Server | Signal ready to start |
+| `battle:progress` | Client → Server | Send typing progress |
+| `battle:finish` | Client → Server | Signal typing finished |
+| `battle:leave` | Client → Server | Leave current room |
+| `battle:matched` | Server → Client | Opponent found (room, players, snippet) |
+| `battle:countdown` | Server → Client | 3-2-1 countdown |
+| `battle:start` | Server → Client | Battle begins |
+| `battle:opponent-progress` | Server → Client | Opponent's live stats |
+| `battle:opponent-finished` | Server → Client | Opponent completed snippet |
+| `battle:result` | Server → Client | Final scores and winner |
+| `battle:time-up` | Server → Client | 60s timer expired |
+| `battle:opponent-disconnected` | Server → Client | Opponent left |
 
 ---
 
@@ -318,9 +384,10 @@ Returns a cached or freshly generated snippet for the given language.
 ### Frontend — Netlify
 
 1. Connect the GitHub repo in Netlify
-2. Set **Build command**: `npm run build` and **Publish directory**: `dist`
-3. Add all `VITE_*` environment variables in Netlify → Site settings → Environment
-4. The `public/_redirects` file handles SPA routing automatically:
+2. **Build command:** `npm run build` · **Publish directory:** `dist`
+3. **Base directory:** `frontend`
+4. Add all `VITE_*` environment variables in Site settings → Environment
+5. SPA routing handled by `public/_redirects`:
    ```
    /* /index.html 200
    ```
@@ -328,14 +395,12 @@ Returns a cached or freshly generated snippet for the given language.
 ### Backend — Railway
 
 1. Create a new Railway project and connect the GitHub repo
-2. Set **Root directory**: `backend`
-3. Add all backend environment variables in Railway → Variables
-4. Railway auto-detects `npm start` from `package.json`
-
-Set `FRONTEND_URL` on Railway to include your Netlify domain so CORS passes:
-```
-FRONTEND_URL=https://typingdotdev.netlify.app
-```
+2. **Root directory:** `backend`
+3. Add all backend env vars in Railway → Variables
+4. Set `FRONTEND_URL` to include your Netlify domain:
+   ```
+   FRONTEND_URL=https://typingdotdev.netlify.app
+   ```
 
 ---
 
