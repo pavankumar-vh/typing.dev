@@ -58,9 +58,15 @@ export default function Battle() {
     [user?.uid]
   )
   const displayName = user?.displayName || localStorage.getItem('profile_name') || 'anonymous'
+  const countdownIvRef = useRef(null)
+  const lastProgressRef = useRef(0)
+  const userIdRef = useRef(userId)
+  const displayNameRef = useRef(displayName)
 
   // Keep phaseRef in sync
   useEffect(() => { phaseRef.current = phase }, [phase])
+  useEffect(() => { userIdRef.current = userId }, [userId])
+  useEffect(() => { displayNameRef.current = displayName }, [displayName])
 
   // Connect socket on mount
   useEffect(() => {
@@ -70,9 +76,10 @@ export default function Battle() {
 
     s.on('connect_error', () => setError('Connection failed. Is the server running?'))
 
-    s.on('battle:opponent-joined', ({ players: p, snippet: sn }) => {
+    s.on('battle:opponent-joined', ({ players: p, snippet: sn, roomCode: rc }) => {
       setPlayers(p)
       setSnippet(sn)
+      if (rc) setRoomCode(rc)
       setPhase('matched')
     })
 
@@ -82,17 +89,21 @@ export default function Battle() {
       setSnippet(sn)
       if (bot) setIsBot(true)
       setPhase('matched')
+      // Auto-ready for bot matches after a brief display
+      if (bot) setTimeout(() => s.emit('battle:ready', { roomCode: rc }), 1200)
     })
 
     s.on('battle:countdown', ({ seconds }) => {
       setPhase('countdown')
       setCountdown(seconds)
+      if (countdownIvRef.current) clearInterval(countdownIvRef.current)
       let c = seconds
       const iv = setInterval(() => {
         c--
         setCountdown(c)
-        if (c <= 0) clearInterval(iv)
+        if (c <= 0) { clearInterval(iv); countdownIvRef.current = null }
       }, 1000)
+      countdownIvRef.current = iv
     })
 
     s.on('battle:start', ({ snippet: sn }) => {
@@ -136,14 +147,14 @@ export default function Battle() {
     const joinParam = searchParams.get('room')
     if (joinParam) {
       // Auto-join a room from a shared challenge link
+      setRoomCode(joinParam.toUpperCase())
       s.on('connect', () => {
         s.emit('battle:join', {
           roomCode: joinParam.toUpperCase(),
-          userId: user?.uid || `anon-${Math.random().toString(36).slice(2, 8)}`,
-          displayName: user?.displayName || localStorage.getItem('profile_name') || 'anonymous',
+          userId: userIdRef.current,
+          displayName: displayNameRef.current,
         }, (res) => {
           if (res.ok) {
-            setRoomCode(joinParam.toUpperCase())
             if (res.snippet) setSnippet(res.snippet)
           } else {
             setError(res.error || 'Could not join room')
@@ -159,11 +170,9 @@ export default function Battle() {
         })
         .catch(() => {})
       s.on('connect', () => {
-        const myId = user?.uid || `anon-${Math.random().toString(36).slice(2, 8)}`
-        const myName = user?.displayName || localStorage.getItem('profile_name') || 'anonymous'
         s.emit('battle:create', {
-          userId: myId,
-          displayName: myName,
+          userId: userIdRef.current,
+          displayName: displayNameRef.current,
           language: language || 'javascript',
         }, (res) => {
           if (res.ok) {
@@ -174,8 +183,8 @@ export default function Battle() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                fromUserId: myId,
-                fromDisplayName: myName,
+                fromUserId: userIdRef.current,
+                fromDisplayName: displayNameRef.current,
                 toUserId: opp,
                 roomCode: res.roomCode,
               }),
@@ -190,6 +199,7 @@ export default function Battle() {
     return () => {
       s.disconnect()
       clearInterval(timerRef.current)
+      if (countdownIvRef.current) clearInterval(countdownIvRef.current)
     }
   }, [])
 
@@ -294,8 +304,12 @@ export default function Battle() {
 
     setMyStats({ wpm, accuracy, progress })
 
-    // Send progress to opponent
-    socketRef.current?.emit('battle:progress', { roomCode, userId, progress, wpm, accuracy })
+    // Send progress to opponent (throttled)
+    const now = Date.now()
+    if (now - lastProgressRef.current >= 200) {
+      lastProgressRef.current = now
+      socketRef.current?.emit('battle:progress', { roomCode, userId, progress, wpm, accuracy })
+    }
 
     // Check if finished
     if (typed.length >= code.length && !finishedRef.current) {
@@ -337,7 +351,9 @@ export default function Battle() {
     setChallengeTarget(null)
     setLinkCopied(false)
     finishedRef.current = false
+    lastProgressRef.current = 0
     clearInterval(timerRef.current)
+    if (countdownIvRef.current) { clearInterval(countdownIvRef.current); countdownIvRef.current = null }
   }
 
   function quickRematch() {

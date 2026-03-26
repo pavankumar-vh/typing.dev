@@ -59,6 +59,7 @@ function randomBotName() {
 const matchQueue = new Map()
 const activeTimers = new Map()
 const botIntervals = new Map()
+const socketRooms = new Map()
 
 const BOT_WAIT_MS = 6000
 const BATTLE_DURATION = 60
@@ -67,8 +68,6 @@ export function initBattleSocket(io) {
   const battleNsp = io.of('/battle')
 
   battleNsp.on('connection', (socket) => {
-    let currentRoom = null
-
     // ── Create private room ──────────────────────────────
     socket.on('battle:create', async ({ userId, displayName, language, difficulty }, cb) => {
       try {
@@ -80,7 +79,7 @@ export function initBattleSocket(io) {
           players: [{ userId, displayName }],
           status: 'waiting',
         })
-        currentRoom = roomCode
+        socketRooms.set(socket.id, roomCode)
         socket.join(roomCode)
         cb({ ok: true, roomCode, battleId: battle._id })
       } catch (err) {
@@ -99,10 +98,11 @@ export function initBattleSocket(io) {
         battle.players.push({ userId, displayName })
         await battle.save()
 
-        currentRoom = roomCode
+        socketRooms.set(socket.id, roomCode)
         socket.join(roomCode)
 
         battleNsp.to(roomCode).emit('battle:opponent-joined', {
+          roomCode,
           players: battle.players.map(p => ({
             userId: p.userId,
             displayName: p.displayName,
@@ -140,13 +140,13 @@ export function initBattleSocket(io) {
             status: 'waiting',
           })
 
-          currentRoom = roomCode
+          socketRooms.set(socket.id, roomCode)
           socket.join(roomCode)
 
           const waitingSocket = battleNsp.sockets.get(waiting.socketId)
           if (waitingSocket) {
             waitingSocket.join(roomCode)
-            waitingSocket.currentRoom = roomCode
+            socketRooms.set(waiting.socketId, roomCode)
           }
 
           const payload = {
@@ -187,7 +187,7 @@ export function initBattleSocket(io) {
               status: 'waiting',
             })
 
-            currentRoom = roomCode
+            socketRooms.set(socket.id, roomCode)
             socket.join(roomCode)
 
             const payload = {
@@ -214,12 +214,12 @@ export function initBattleSocket(io) {
 
     // ── Player ready ─────────────────────────────────────
     socket.on('battle:ready', async ({ roomCode }) => {
-      const battle = await Battle.findOne({ roomCode })
-      if (!battle || battle.players.length < 2) return
-      if (battle.status !== 'waiting') return
-
-      battle.status = 'countdown'
-      await battle.save()
+      const battle = await Battle.findOneAndUpdate(
+        { roomCode, status: 'waiting', 'players.1': { $exists: true } },
+        { $set: { status: 'countdown' } },
+        { new: true }
+      )
+      if (!battle) return
 
       battleNsp.to(roomCode).emit('battle:countdown', { seconds: 3 })
 
@@ -363,7 +363,9 @@ export function initBattleSocket(io) {
         }
       }
 
+      const currentRoom = socketRooms.get(socket.id)
       if (currentRoom) {
+        socketRooms.delete(socket.id)
         socket.to(currentRoom).emit('battle:opponent-disconnected')
         if (activeTimers.has(currentRoom)) {
           clearTimeout(activeTimers.get(currentRoom))
@@ -378,6 +380,7 @@ export function initBattleSocket(io) {
 
     // ── Leave room ───────────────────────────────────────
     socket.on('battle:leave', () => {
+      const currentRoom = socketRooms.get(socket.id)
       if (currentRoom) {
         socket.to(currentRoom).emit('battle:opponent-disconnected')
         socket.leave(currentRoom)
@@ -389,7 +392,7 @@ export function initBattleSocket(io) {
           clearInterval(botIntervals.get(currentRoom))
           botIntervals.delete(currentRoom)
         }
-        currentRoom = null
+        socketRooms.delete(socket.id)
       }
     })
   })
