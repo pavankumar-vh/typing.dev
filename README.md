@@ -59,9 +59,9 @@ Compete in real-time 1v1 battles. Track your improvement. Let AI keep your drill
 
 <div align="center">
 
-https://github.com/user-attachments/assets/demo.webm
+<!-- To embed the video on GitHub: drag-drop docs/screenshots/demo.webm into a GitHub issue comment, copy the generated URL, and paste it below -->
 
-<video src="docs/screenshots/demo.webm" width="100%" autoplay loop muted playsinline></video>
+https://github.com/pavankumar-vh/typing.dev/raw/main/docs/screenshots/demo.webm
 
 </div>
 

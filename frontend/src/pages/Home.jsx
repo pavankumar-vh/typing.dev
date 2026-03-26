@@ -190,12 +190,13 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handler)
   }, [showCustom])
 
-  const handleLanguageChange   = (l)    => { setLanguage(l);    loadNewSnippet(l, duration, difficulty, codeFocus, snippetSize); setShowCustom(false) }
-  const handleDurationChange   = (d)    => { setDuration(d);    loadNewSnippet(language, d, difficulty, codeFocus, snippetSize); setShowCustom(false) }
-  const handleDifficultyChange = (diff) => { setDifficulty(diff); loadNewSnippet(language, duration, diff, codeFocus, snippetSize) }
-  const handleFocusChange      = (f)    => { setCodeFocus(f);   loadNewSnippet(language, duration, difficulty, f, snippetSize) }
-  const handleSizeChange       = (sz)   => { setSnippetSize(sz); loadNewSnippet(language, duration, difficulty, codeFocus, sz) }
+  const handleLanguageChange   = (l)    => setLanguage(l)
+  const handleDurationChange   = (d)    => { setDuration(d); setShowCustom(false) }
+  const handleDifficultyChange = (diff) => setDifficulty(diff)
+  const handleFocusChange      = (f)    => setCodeFocus(f)
+  const handleSizeChange       = (sz)   => setSnippetSize(sz)
   const handlePunctuationToggle = ()    => setPunctuation((v) => !v)
+  const handleApplyConfig      = ()    => { loadNewSnippet(language, duration, difficulty, codeFocus, snippetSize); setShowCustom(false) }
 
   // ─── Line-scroll: translate inner div per line ───────────
   useEffect(() => {
@@ -615,11 +616,11 @@ export default function Home() {
                       boxShadow: '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.3)',
                     }}
                   >
-                    <div className="px-5 sm:px-6 pt-5 pb-5" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                    <div className="px-5 sm:px-6 pt-5 pb-5" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                       {/* ── LANGUAGE ── */}
                       <div>
-                        <p className="font-mono mb-2.5" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+                        <p className="font-mono mb-2" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
                           language
                         </p>
                         <div className="flex flex-wrap gap-1">
@@ -662,199 +663,101 @@ export default function Home() {
                       {/* ── Divider ── */}
                       <div style={{ height: '1px', background: 'rgba(0,255,65,0.04)' }} />
 
-                      {/* ── Row: DIFFICULTY + CODE FOCUS ── */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-                        {/* DIFFICULTY — segmented control */}
+                      {/* ── DIFFICULTY + CODE FOCUS ── */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <p className="font-mono mb-2" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-                            difficulty
-                          </p>
-                          <div className="flex relative" style={{
-                            borderRadius: '8px', overflow: 'hidden',
-                            border: '1px solid rgba(0,80,0,0.2)',
-                            background: 'rgba(0,10,0,0.5)',
-                          }}>
+                          <p className="font-mono mb-2" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>difficulty</p>
+                          <div className="flex relative" style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,80,0,0.2)', background: 'rgba(0,10,0,0.5)' }}>
                             {DIFFICULTIES.map((diff, i) => {
                               const active = difficulty === diff
                               const col = { easy: '#4ADE80', medium: '#00FF41', hard: '#FB923C' }[diff]
                               return (
-                                <motion.button
-                                  key={diff}
-                                  onClick={() => handleDifficultyChange(diff)}
-                                  whileTap={{ scale: 0.97 }}
+                                <motion.button key={diff} onClick={() => handleDifficultyChange(diff)} whileTap={{ scale: 0.97 }}
                                   className="font-mono capitalize flex-1 relative z-10"
-                                  style={{
-                                    fontSize: '12px', padding: '8px 0',
-                                    color: active ? col : 'rgba(0,204,53,0.3)',
-                                    textShadow: active ? `0 0 12px ${col}60` : 'none',
-                                    transition: 'color 0.2s ease',
-                                    borderRight: i < 2 ? '1px solid rgba(0,80,0,0.15)' : 'none',
-                                  }}
+                                  style={{ fontSize: '12px', padding: '8px 0', color: active ? col : 'rgba(0,204,53,0.3)', textShadow: active ? `0 0 12px ${col}60` : 'none', transition: 'color 0.2s ease', borderRight: i < 2 ? '1px solid rgba(0,80,0,0.15)' : 'none' }}
                                 >
-                                  {active && (
-                                    <motion.div
-                                      layoutId="diff-seg"
-                                      style={{
-                                        position: 'absolute', inset: 0,
-                                        background: `${col}0C`,
-                                        borderRadius: '6px',
-                                      }}
-                                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                                    />
-                                  )}
+                                  {active && <motion.div layoutId="diff-seg" style={{ position: 'absolute', inset: 0, background: `${col}0C`, borderRadius: '6px' }} transition={{ type: 'spring', stiffness: 400, damping: 30 }} />}
                                   <span style={{ position: 'relative' }}>{diff}</span>
                                 </motion.button>
                               )
                             })}
                           </div>
                         </div>
-
-                        {/* CODE FOCUS */}
                         <div>
-                          <p className="font-mono mb-2" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-                            code focus
-                          </p>
+                          <p className="font-mono mb-2" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>code focus</p>
                           <div className="flex gap-1 flex-wrap">
                             {CODE_FOCUS.map((f) => {
                               const active = codeFocus === f
                               return (
-                                <motion.button
-                                  key={f}
-                                  onClick={() => handleFocusChange(f)}
-                                  whileTap={{ scale: 0.96 }}
+                                <motion.button key={f} onClick={() => handleFocusChange(f)} whileTap={{ scale: 0.96 }}
                                   className="font-mono capitalize"
-                                  style={{
-                                    fontSize: '12px', padding: '8px 14px',
-                                    borderRadius: '8px',
-                                    color:      active ? '#00FF41' : 'rgba(0,204,53,0.3)',
-                                    background: active ? 'rgba(0,255,65,0.08)' : 'transparent',
-                                    textShadow: active ? '0 0 12px rgba(0,255,65,0.4)' : 'none',
-                                    transition: 'all 0.15s ease',
-                                  }}
-                                >
-                                  {f}
-                                </motion.button>
+                                  style={{ fontSize: '12px', padding: '8px 14px', borderRadius: '8px', color: active ? '#00FF41' : 'rgba(0,204,53,0.3)', background: active ? 'rgba(0,255,65,0.08)' : 'transparent', textShadow: active ? '0 0 12px rgba(0,255,65,0.4)' : 'none', transition: 'all 0.15s ease' }}
+                                >{f}</motion.button>
                               )
                             })}
                           </div>
                         </div>
-
                       </div>
 
-                      {/* ── Row: SNIPPET SIZE + PUNCTUATION ── */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-                        {/* SNIPPET SIZE — segmented control */}
+                      {/* ── SNIPPET SIZE + PUNCTUATION ── */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <p className="font-mono mb-2" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-                            snippet size
-                          </p>
-                          <div className="flex relative" style={{
-                            borderRadius: '8px', overflow: 'hidden',
-                            border: '1px solid rgba(0,80,0,0.2)',
-                            background: 'rgba(0,10,0,0.5)',
-                          }}>
+                          <p className="font-mono mb-2" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>snippet size</p>
+                          <div className="flex relative" style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,80,0,0.2)', background: 'rgba(0,10,0,0.5)' }}>
                             {SNIPPET_SIZES.map((sz, i) => {
                               const active = snippetSize === sz
                               return (
-                                <motion.button
-                                  key={sz}
-                                  onClick={() => handleSizeChange(sz)}
-                                  whileTap={{ scale: 0.97 }}
+                                <motion.button key={sz} onClick={() => handleSizeChange(sz)} whileTap={{ scale: 0.97 }}
                                   className="font-mono capitalize flex-1 relative z-10"
-                                  style={{
-                                    fontSize: '12px', padding: '8px 0',
-                                    color: active ? '#00FF41' : 'rgba(0,204,53,0.3)',
-                                    textShadow: active ? '0 0 12px rgba(0,255,65,0.5)' : 'none',
-                                    transition: 'color 0.2s ease',
-                                    borderRight: i < 2 ? '1px solid rgba(0,80,0,0.15)' : 'none',
-                                  }}
+                                  style={{ fontSize: '12px', padding: '8px 0', color: active ? '#00FF41' : 'rgba(0,204,53,0.3)', textShadow: active ? '0 0 12px rgba(0,255,65,0.5)' : 'none', transition: 'color 0.2s ease', borderRight: i < 2 ? '1px solid rgba(0,80,0,0.15)' : 'none' }}
                                 >
-                                  {active && (
-                                    <motion.div
-                                      layoutId="size-seg"
-                                      style={{
-                                        position: 'absolute', inset: 0,
-                                        background: 'rgba(0,255,65,0.07)',
-                                        borderRadius: '6px',
-                                      }}
-                                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                                    />
-                                  )}
+                                  {active && <motion.div layoutId="size-seg" style={{ position: 'absolute', inset: 0, background: 'rgba(0,255,65,0.07)', borderRadius: '6px' }} transition={{ type: 'spring', stiffness: 400, damping: 30 }} />}
                                   <span style={{ position: 'relative' }}>{sz}</span>
                                 </motion.button>
                               )
                             })}
                           </div>
                         </div>
-
-                        {/* PUNCTUATION — minimal toggle */}
                         <div>
-                          <p className="font-mono mb-2" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-                            options
-                          </p>
-                          <button
-                            onClick={handlePunctuationToggle}
-                            className="flex items-center gap-3 font-mono w-full"
-                            style={{
-                              fontSize: '12px', padding: '8px 14px',
-                              borderRadius: '8px',
-                              color:      punctuation ? '#00FF41' : 'rgba(0,204,53,0.3)',
-                              background: 'rgba(0,10,0,0.5)',
-                              border:     '1px solid rgba(0,80,0,0.2)',
-                              transition: 'all 0.15s ease',
-                            }}
+                          <p className="font-mono mb-2" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.3)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>options</p>
+                          <button onClick={handlePunctuationToggle} className="flex items-center gap-3 font-mono w-full"
+                            style={{ fontSize: '12px', padding: '8px 14px', borderRadius: '8px', color: punctuation ? '#00FF41' : 'rgba(0,204,53,0.3)', background: 'rgba(0,10,0,0.5)', border: '1px solid rgba(0,80,0,0.2)', transition: 'all 0.15s ease' }}
                           >
-                            {/* Toggle track */}
-                            <span style={{
-                              display: 'inline-flex', alignItems: 'center',
-                              width: 28, height: 14, borderRadius: '7px', flexShrink: 0,
-                              background: punctuation ? 'rgba(0,255,65,0.25)' : 'rgba(0,40,0,0.6)',
-                              transition: 'all 0.25s ease',
-                              position: 'relative',
-                            }}>
-                              <motion.span
-                                animate={{ x: punctuation ? 14 : 2 }}
-                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                                style={{
-                                  width: 10, height: 10, borderRadius: '50%',
-                                  background: punctuation ? '#00FF41' : 'rgba(0,204,53,0.25)',
-                                  boxShadow: punctuation ? '0 0 8px rgba(0,255,65,0.5)' : 'none',
-                                }}
+                            <span style={{ display: 'inline-flex', alignItems: 'center', width: 28, height: 14, borderRadius: '7px', flexShrink: 0, background: punctuation ? 'rgba(0,255,65,0.25)' : 'rgba(0,40,0,0.6)', transition: 'all 0.25s ease', position: 'relative' }}>
+                              <motion.span animate={{ x: punctuation ? 14 : 2 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                style={{ width: 10, height: 10, borderRadius: '50%', background: punctuation ? '#00FF41' : 'rgba(0,204,53,0.25)', boxShadow: punctuation ? '0 0 8px rgba(0,255,65,0.5)' : 'none' }}
                               />
                             </span>
                             punctuation
                           </button>
                         </div>
-
                       </div>
 
                       {/* ── Divider ── */}
                       <div style={{ height: '1px', background: 'rgba(0,255,65,0.04)' }} />
 
-                      {/* ── Footer ── */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                      {/* ── Footer: Apply + shortcuts ── */}
+                      <div className="flex items-center gap-3">
                         <motion.button
-                          onClick={() => { loadNewSnippet(language, duration, difficulty, codeFocus, snippetSize); setShowCustom(false) }}
+                          onClick={handleApplyConfig}
                           whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.97 }}
+                          whileTap={{ scale: 0.96 }}
                           className="flex-1 font-mono flex items-center justify-center gap-2"
                           style={{
-                            fontSize: '11px', padding: '9px 0',
+                            fontSize: '11px', padding: '10px 0',
                             borderRadius: '8px',
-                            color: 'rgba(0,255,65,0.7)',
-                            background: 'rgba(0,255,65,0.04)',
-                            border: '1px solid rgba(0,255,65,0.1)',
+                            color: '#00FF41',
+                            background: 'rgba(0,255,65,0.08)',
+                            border: '1px solid rgba(0,255,65,0.18)',
                             letterSpacing: '0.1em',
+                            textShadow: '0 0 12px rgba(0,255,65,0.3)',
                             transition: 'all 0.15s ease',
                           }}
                         >
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
                           </svg>
-                          REGENERATE
+                          APPLY &amp; GENERATE
                         </motion.button>
                         <div className="hidden sm:flex items-center gap-1.5 font-mono" style={{ fontSize: '9px', color: 'rgba(0,204,53,0.18)', letterSpacing: '0.04em' }}>
                           <span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(0,255,65,0.03)', border: '1px solid rgba(0,80,0,0.15)' }}>tab</span>
