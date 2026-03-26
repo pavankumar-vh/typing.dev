@@ -613,20 +613,23 @@ export default function Home() {
                       background: 'rgba(0,6,0,0.98)',
                       border: '1px solid rgba(0,130,0,0.22)',
                       boxShadow: '0 16px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,255,65,0.03)',
+                      backdropFilter: 'blur(12px)',
                     }}
                   >
                     {/* ── Panel header ── */}
                     <div
-                      className="flex items-center justify-between px-6 py-3"
+                      className="flex items-center justify-between px-5 sm:px-6 py-3"
                       style={{ borderBottom: '1px solid rgba(0,100,0,0.12)' }}
                     >
-                      <span className="font-mono" style={{ fontSize: '11px', color: 'rgba(0,204,53,0.4)', letterSpacing: '0.16em' }}>
+                      <span className="font-mono flex items-center gap-2" style={{ fontSize: '11px', color: 'rgba(0,204,53,0.4)', letterSpacing: '0.16em' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
                         CUSTOMIZE
                       </span>
                       <div className="flex items-center gap-2">
-                        {/* Active config summary chips */}
                         {[LANG_BADGE[language], difficulty, codeFocus, snippetSize].map((chip, i) => (
-                          <span key={i} className="font-mono" style={{
+                          <span key={i} className="font-mono hidden sm:inline-block" style={{
                             fontSize: '10px', padding: '3px 8px', borderRadius: '5px',
                             background: 'rgba(0,255,65,0.07)', color: 'rgba(0,204,53,0.55)',
                             border: '1px solid rgba(0,100,0,0.22)', letterSpacing: '0.06em',
@@ -635,17 +638,23 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="px-6 py-5">
+                    <div className="px-5 sm:px-6 py-5">
 
                       {/* ── LANGUAGE ── */}
-                      <p className="font-mono mb-3" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>language</p>
+                      <p className="font-mono mb-3 flex items-center gap-2" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                        language
+                      </p>
                       <div className="flex flex-wrap gap-2 mb-5">
                         {LANGUAGES.map((l) => {
                           const active = language === l
                           return (
-                            <button
+                            <motion.button
                               key={l}
                               onClick={() => handleLanguageChange(l)}
+                              whileTap={{ scale: 0.95 }}
                               className="inline-flex items-center gap-1.5 rounded-lg transition-all duration-150 font-mono"
                               style={{
                                 fontSize: '13px',
@@ -665,25 +674,31 @@ export default function Home() {
                                 {LANG_BADGE[l] ?? l.slice(0, 2).toUpperCase()}
                               </span>
                               {l}
-                            </button>
+                            </motion.button>
                           )
                         })}
                       </div>
 
                       {/* ── Row: DIFFICULTY + CODE FOCUS ── */}
-                      <div className="grid grid-cols-2 gap-5 mb-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
 
                         {/* DIFFICULTY */}
                         <div>
-                          <p className="font-mono mb-2.5" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>difficulty</p>
+                          <p className="font-mono mb-2.5 flex items-center gap-2" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                            difficulty
+                          </p>
                           <div className="flex gap-1.5">
                             {DIFFICULTIES.map((diff) => {
                               const active = difficulty === diff
                               const col = { easy: '#4ADE80', medium: '#00FF41', hard: '#FB923C' }[diff]
                               return (
-                                <button
+                                <motion.button
                                   key={diff}
                                   onClick={() => handleDifficultyChange(diff)}
+                                  whileTap={{ scale: 0.95 }}
                                   className="rounded-lg transition-all duration-150 font-mono capitalize flex-1"
                                   style={{
                                     fontSize: '12px', padding: '6px 0',
@@ -694,7 +709,7 @@ export default function Home() {
                                   }}
                                 >
                                   {diff}
-                                </button>
+                                </motion.button>
                               )
                             })}
                           </div>
@@ -702,14 +717,20 @@ export default function Home() {
 
                         {/* CODE FOCUS */}
                         <div>
-                          <p className="font-mono mb-2.5" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>code focus</p>
+                          <p className="font-mono mb-2.5 flex items-center gap-2" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            code focus
+                          </p>
                           <div className="flex gap-1.5 flex-wrap">
                             {CODE_FOCUS.map((f) => {
                               const active = codeFocus === f
                               return (
-                                <button
+                                <motion.button
                                   key={f}
                                   onClick={() => handleFocusChange(f)}
+                                  whileTap={{ scale: 0.95 }}
                                   className="rounded-lg transition-all duration-150 font-mono capitalize"
                                   style={{
                                     fontSize: '12px', padding: '6px 10px',
@@ -720,7 +741,7 @@ export default function Home() {
                                   }}
                                 >
                                   {f}
-                                </button>
+                                </motion.button>
                               )
                             })}
                           </div>
@@ -729,18 +750,24 @@ export default function Home() {
                       </div>
 
                       {/* ── Row: SNIPPET SIZE + OPTIONS ── */}
-                      <div className="grid grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
                         {/* SNIPPET SIZE */}
                         <div>
-                          <p className="font-mono mb-2.5" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>snippet size</p>
+                          <p className="font-mono mb-2.5 flex items-center gap-2" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            snippet size
+                          </p>
                           <div className="flex gap-1.5">
                             {SNIPPET_SIZES.map((sz) => {
                               const active = snippetSize === sz
                               return (
-                                <button
+                                <motion.button
                                   key={sz}
                                   onClick={() => handleSizeChange(sz)}
+                                  whileTap={{ scale: 0.95 }}
                                   className="rounded-lg transition-all duration-150 font-mono capitalize flex-1"
                                   style={{
                                     fontSize: '12px', padding: '6px 0',
@@ -751,7 +778,7 @@ export default function Home() {
                                   }}
                                 >
                                   {sz}
-                                </button>
+                                </motion.button>
                               )
                             })}
                           </div>
@@ -759,10 +786,16 @@ export default function Home() {
 
                         {/* OPTIONS */}
                         <div>
-                          <p className="font-mono mb-2.5" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>options</p>
+                          <p className="font-mono mb-2.5 flex items-center gap-2" style={{ fontSize: '13px', color: 'rgba(0,204,53,0.5)', letterSpacing: '0.12em' }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                            options
+                          </p>
                           <div className="flex gap-1.5">
-                            <button
+                            <motion.button
                               onClick={handlePunctuationToggle}
+                              whileTap={{ scale: 0.95 }}
                               className="inline-flex items-center gap-1.5 rounded-lg transition-all duration-150 font-mono"
                               style={{
                                 fontSize: '12px', padding: '6px 12px',
@@ -774,33 +807,39 @@ export default function Home() {
                             >
                               <span style={{ fontSize: '12px', lineHeight: 1, opacity: 0.7 }}>@</span>
                               punctuation
-                            </button>
+                            </motion.button>
                           </div>
                         </div>
 
                       </div>
 
-                      {/* ── Regenerate button ── */}
-                      <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(0,100,0,0.12)' }}>
-                        <button
+                      {/* ── Footer: Regenerate + shortcuts ── */}
+                      <div className="mt-5 pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3" style={{ borderTop: '1px solid rgba(0,100,0,0.12)' }}>
+                        <motion.button
                           onClick={() => { loadNewSnippet(language, duration, difficulty, codeFocus, snippetSize); setShowCustom(false) }}
-                          className="w-full rounded-lg font-mono transition-all duration-150 flex items-center justify-center gap-2"
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex-1 rounded-lg font-mono transition-all duration-150 flex items-center justify-center gap-2"
                           style={{
                             fontSize: '12px', padding: '8px 0',
-                            color: 'rgba(0,204,53,0.5)',
-                            background: 'rgba(0,255,65,0.03)',
-                            border: '1px solid rgba(0,100,0,0.18)',
+                            color: '#00FF41',
+                            background: 'rgba(0,255,65,0.06)',
+                            border: '1px solid rgba(0,255,65,0.18)',
                             letterSpacing: '0.1em',
                           }}
-                          onMouseEnter={e => { e.currentTarget.style.color='#00FF41'; e.currentTarget.style.background='rgba(0,255,65,0.08)'; e.currentTarget.style.borderColor='rgba(0,255,65,0.2)' }}
-                          onMouseLeave={e => { e.currentTarget.style.color='rgba(0,204,53,0.5)'; e.currentTarget.style.background='rgba(0,255,65,0.03)'; e.currentTarget.style.borderColor='rgba(0,100,0,0.18)' }}
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
                             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                           </svg>
                           regenerate snippet
-                        </button>
+                        </motion.button>
+                        <div className="hidden sm:flex items-center gap-3 font-mono" style={{ fontSize: '10px', color: 'rgba(0,204,53,0.25)', letterSpacing: '0.06em' }}>
+                          <span style={{ padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(0,100,0,0.2)', background: 'rgba(0,255,65,0.03)' }}>tab</span>
+                          <span>new snippet</span>
+                          <span style={{ padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(0,100,0,0.2)', background: 'rgba(0,255,65,0.03)' }}>esc</span>
+                          <span>restart</span>
+                        </div>
                       </div>
 
                     </div>
