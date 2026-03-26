@@ -13,10 +13,12 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
-/* ─── Custom cursor (JS component — kills native cursor entirely) ─ */
-*, *::before, *::after,
-button, a, input, textarea, select, label, [role="button"] {
-  cursor: none !important;
+/* ─── Custom cursor (JS component — kills native cursor on mouse devices) ─ */
+@media (pointer: fine) {
+  *, *::before, *::after,
+  button, a, input, textarea, select, label, [role="button"] {
+    cursor: none !important;
+  }
 }
 
 /* ─── Cursor pulse (typing cursor blink) ────────────────── */

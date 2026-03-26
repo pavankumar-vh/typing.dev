@@ -15,8 +15,20 @@ export default function CursorGlow() {
   const arrowRef = useRef(null)
   const [hover, setHover]   = useState(false)
   const [clicking, setClick] = useState(false)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
 
   useEffect(() => {
+    // Detect touch-only devices (no fine pointer = no mouse)
+    const hasFineMouse = window.matchMedia('(pointer: fine)').matches
+    const isMobile = 'ontouchstart' in window && !hasFineMouse
+    if (isMobile) {
+      setIsTouchDevice(true)
+      return
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isTouchDevice) return
     const onMove = (e) => {
       posRef.current = { x: e.clientX, y: e.clientY }
       setHover(isClickable(e.target) || isClickable(e.target?.closest?.('button,a,[role=button]')))
@@ -37,7 +49,9 @@ export default function CursorGlow() {
       window.removeEventListener('mousedown', onDown)
       window.removeEventListener('mouseup',   onUp)
     }
-  }, [])
+  }, [isTouchDevice])
+
+  if (isTouchDevice) return null
 
   const color    = clicking ? '#AAFFAA' : '#00FF41'
   const glow     = clicking ? '0 0 18px 4px rgba(0,255,65,0.65)'
