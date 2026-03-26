@@ -59,11 +59,9 @@ Compete in real-time 1v1 battles. Track your improvement. Let AI keep your drill
 
 <div align="center">
 
-<!-- Replace the link below with your demo video URL (YouTube, Loom, etc.) -->
+https://github.com/user-attachments/assets/demo.webm
 
-[![Watch the demo](docs/screenshots/hero.png)](https://youtube.com/watch?v=YOUR_VIDEO_ID)
-
-*Click the image above to watch the full demo video*
+<video src="docs/screenshots/demo.webm" width="100%" autoplay loop muted playsinline></video>
 
 </div>
 
