@@ -48,6 +48,7 @@ export default function Battle() {
   const timerRef = useRef(null)
 
   const typingRef = useRef(null)
+  const mobileInputRef = useRef(null)
   const socketRef = useRef(null)
   const phaseRef = useRef('lobby')
   const finishedRef = useRef(false)
@@ -330,8 +331,30 @@ export default function Battle() {
 
   // Focus indicator
   useEffect(() => {
-    if (phase === 'active' && typingRef.current) typingRef.current.focus()
+    if (phase === 'active') {
+      typingRef.current?.focus()
+      mobileInputRef.current?.focus()
+    }
   }, [phase])
+
+  // Mobile input handler — captures virtual keyboard input via hidden textarea
+  const handleMobileInput = useCallback((e) => {
+    if (phaseRef.current !== 'active' || !snippet || finishedRef.current) return
+    const data = e.nativeEvent.data
+    if (data === null || data === undefined) {
+      // Backspace / deletion
+      setTyped(prev => prev.slice(0, -1))
+      if (mobileInputRef.current) mobileInputRef.current.value = ''
+      return
+    }
+    const char = data.slice(-1)
+    if (!char) { if (mobileInputRef.current) mobileInputRef.current.value = ''; return }
+    setTyped(prev => {
+      if (char === '\n') return prev + '\n'
+      return prev + char
+    })
+    if (mobileInputRef.current) mobileInputRef.current.value = ''
+  }, [snippet])
 
   function resetBattle() {
     socketRef.current?.emit('battle:leave')
@@ -672,7 +695,31 @@ export default function Battle() {
                 className="battle-code-area"
                 ref={typingRef}
                 tabIndex={0}
+                onClick={() => mobileInputRef.current?.focus()}
               >
+                {/* Hidden textarea for mobile keyboard */}
+                <textarea
+                  ref={mobileInputRef}
+                  onInput={handleMobileInput}
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  autoComplete="off"
+                  spellCheck={false}
+                  style={{
+                    position: 'absolute',
+                    top: 0, left: 0,
+                    width: '100%', height: '100%',
+                    opacity: 0,
+                    zIndex: 5,
+                    caretColor: 'transparent',
+                    fontSize: '16px',
+                    resize: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    background: 'transparent',
+                    color: 'transparent',
+                  }}
+                />
                 <pre className="battle-code-pre">
                   {snippet.content.split('').map((ch, i) => {
                     let cls = 'battle-char-pending'

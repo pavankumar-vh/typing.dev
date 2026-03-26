@@ -144,6 +144,7 @@ export default function Home() {
   const caretRef        = useRef(null)       // absolutely-positioned smooth caret overlay
   const textInnerRef    = useRef(null)
   const lastScrollLine  = useRef(0)
+  const mobileInputRef  = useRef(null)       // hidden textarea for mobile keyboard
 
   // ─── Reset / load ────────────────────────────────────────
   const resetState = useCallback((newSnippet, newDuration) => {
@@ -416,6 +417,63 @@ export default function Home() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
+
+  // Mobile input handler — captures virtual keyboard input via hidden textarea
+  const handleMobileInput = useCallback((e) => {
+    const data = e.nativeEvent.data
+    if (data === null || data === undefined) {
+      // Backspace / deletion on mobile
+      if (phase === 'idle') return
+      setTyped((prev) => {
+        const next = prev.slice(0, -1)
+        typedRef.current = next
+        updateMetrics(next)
+        let trailing = 0
+        for (let i = next.length - 1; i >= 0; i--) {
+          if (!next[i].correct) trailing++; else break
+        }
+        setBlocked(trailing >= MAX_ERRORS_AHEAD)
+        return next
+      })
+      if (mobileInputRef.current) mobileInputRef.current.value = ''
+      return
+    }
+
+    if (blocked) { if (mobileInputRef.current) mobileInputRef.current.value = ''; return }
+
+    const char = data === '\n' ? '\n' : data.slice(-1)
+    if (!char || char.length !== 1) { if (mobileInputRef.current) mobileInputRef.current.value = ''; return }
+
+    if (phase === 'idle' && snippet) {
+      startTimeRef.current = Date.now()
+      setPhase('active')
+      timerRef.current = setInterval(() => {
+        wpmSamplesRef.current.push(rollingWPM(typedRef.current))
+        rawWpmSamplesRef.current.push(calculateWPM(typedRef.current.length, Date.now() - startTimeRef.current))
+        setTimeRemaining((prev) => (prev <= 1 ? 0 : prev - 1))
+      }, 1000)
+    }
+    if (phase === 'result') { if (mobileInputRef.current) mobileInputRef.current.value = ''; return }
+
+    setTyped((prev) => {
+      if (!snippet || prev.length >= snippet.content.length) return prev
+      const expected = snippet.content[prev.length]
+      const next = [...prev, { char, correct: char === expected, ts: Date.now() }]
+      typedRef.current = next
+      updateMetrics(next)
+      let trailing = 0
+      for (let i = next.length - 1; i >= 0; i--) {
+        if (!next[i].correct) trailing++; else break
+      }
+      setBlocked(trailing >= MAX_ERRORS_AHEAD)
+      if (next.length === snippet.content.length) {
+        clearInterval(timerRef.current)
+        setTimeout(() => finalize(next), 0)
+      }
+      return next
+    })
+    if (mobileInputRef.current) mobileInputRef.current.value = ''
+  }, [phase, snippet, blocked, updateMetrics, finalize])
 
   if (snippetLoading || !snippet) return (
     <motion.div
@@ -806,7 +864,31 @@ export default function Home() {
               <div
                 className="overflow-hidden relative rounded"
                 style={{ height: `${LINE_H * VISIBLE_LINES}px` }}
+                onClick={() => mobileInputRef.current?.focus()}
               >
+                {/* Hidden textarea for mobile keyboard */}
+                <textarea
+                  ref={mobileInputRef}
+                  onInput={handleMobileInput}
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  autoComplete="off"
+                  spellCheck={false}
+                  style={{
+                    position: 'absolute',
+                    top: 0, left: 0,
+                    width: '100%', height: '100%',
+                    opacity: 0,
+                    zIndex: 5,
+                    caretColor: 'transparent',
+                    fontSize: '16px',
+                    resize: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    background: 'transparent',
+                    color: 'transparent',
+                  }}
+                />
                 {/* Bottom fade only — top fade was hiding the first line */}
                 <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
                   style={{ height: LINE_H, background: 'linear-gradient(to top, #000A00 0%, transparent 100%)' }} />
