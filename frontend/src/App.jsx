@@ -55,6 +55,7 @@ function Avatar() {
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
+const GA_MEASUREMENT_ID = 'G-TZFYN9Z84P'
 
 function ChallengeNotif() {
   const { user } = useAuth()
@@ -143,6 +144,18 @@ function AppShell({ booted, setBooted }) {
   const { user, loading } = useAuth()
   const location = useLocation()
   const isLanding = location.pathname === '/'
+
+  useEffect(() => {
+    if (!window.gtag) return
+
+    const pagePath = `${location.pathname}${location.search}${location.hash}`
+    window.gtag('event', 'page_view', {
+      page_title: document.title,
+      page_location: window.location.href,
+      page_path: pagePath,
+      send_to: GA_MEASUREMENT_ID,
+    })
+  }, [location])
 
   if (loading) return null  // wait for auth state before rendering
 
